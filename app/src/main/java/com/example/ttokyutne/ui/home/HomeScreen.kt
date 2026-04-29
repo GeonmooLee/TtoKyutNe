@@ -52,6 +52,7 @@ private val WarmInk = Color(0xFFB45731)
 fun HomeScreen(
     uiState: HomeUiState = HomeUiState(),
     notificationPermissionGranted: Boolean = true,
+    onOpenTodayAnalysis: () -> Unit = {},
     onRecordTestEvent: () -> Unit = {},
     onStartScreenMonitor: () -> Unit = {},
     onRequestNotificationPermission: () -> Unit = {},
@@ -81,7 +82,7 @@ fun HomeScreen(
                 lastIntervalSeconds = uiState.lastIntervalSeconds
             )
             ReassurancePanel()
-            ActionButtons()
+            ActionButtons(onOpenTodayAnalysis = onOpenTodayAnalysis)
             ScreenMonitorButton(onStartScreenMonitor = onStartScreenMonitor)
             DeveloperTestButton(
                 isSaving = uiState.isSavingTestEvent,
@@ -373,13 +374,15 @@ private fun ReassurancePanel() {
 }
 
 @Composable
-private fun ActionButtons() {
+private fun ActionButtons(
+    onOpenTodayAnalysis: () -> Unit
+) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         Button(
-            onClick = {},
+            onClick = onOpenTodayAnalysis,
             modifier = Modifier
                 .weight(1f)
                 .height(52.dp),

@@ -18,17 +18,24 @@ import androidx.compose.runtime.setValue
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModelProvider
 import com.example.ttokyutne.monitor.ScreenMonitorService
+import com.example.ttokyutne.ui.analysis.TodayAnalysisScreen
 import com.example.ttokyutne.ui.home.HomeScreen
 import com.example.ttokyutne.ui.home.HomeViewModel
 import com.example.ttokyutne.ui.theme.TtoKyutNeTheme
 
 private const val LOG_TAG = "Ttokyeonne"
 
+private enum class AppScreen {
+    Home,
+    TodayAnalysis
+}
+
 class MainActivity : ComponentActivity() {
     private lateinit var homeViewModel: HomeViewModel
     private lateinit var notificationPermissionLauncher: ActivityResultLauncher<String>
     private var notificationPermissionGranted by mutableStateOf(true)
     private var pendingStartAfterNotificationPermission = false
+    private var currentScreen by mutableStateOf(AppScreen.Home)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -54,13 +61,25 @@ class MainActivity : ComponentActivity() {
             TtoKyutNeTheme {
                 val uiState by homeViewModel.uiState.collectAsState()
 
-                HomeScreen(
-                    uiState = uiState,
-                    notificationPermissionGranted = notificationPermissionGranted,
-                    onRecordTestEvent = homeViewModel::recordTestEvent,
-                    onStartScreenMonitor = ::startScreenMonitorService,
-                    onRequestNotificationPermission = ::requestNotificationPermission
-                )
+                when (currentScreen) {
+                    AppScreen.Home -> {
+                        HomeScreen(
+                            uiState = uiState,
+                            notificationPermissionGranted = notificationPermissionGranted,
+                            onOpenTodayAnalysis = ::openTodayAnalysis,
+                            onRecordTestEvent = homeViewModel::recordTestEvent,
+                            onStartScreenMonitor = ::startScreenMonitorService,
+                            onRequestNotificationPermission = ::requestNotificationPermission
+                        )
+                    }
+
+                    AppScreen.TodayAnalysis -> {
+                        TodayAnalysisScreen(
+                            analysis = uiState.todayAnalysis,
+                            onBack = { currentScreen = AppScreen.Home }
+                        )
+                    }
+                }
             }
         }
     }
@@ -88,6 +107,11 @@ class MainActivity : ComponentActivity() {
         val intent = Intent(this, ScreenMonitorService::class.java)
         ContextCompat.startForegroundService(this, intent)
         Log.d(LOG_TAG, "Requested ScreenMonitorService start")
+    }
+
+    private fun openTodayAnalysis() {
+        homeViewModel.refreshTodayStats()
+        currentScreen = AppScreen.TodayAnalysis
     }
 
     private fun requestNotificationPermission() {

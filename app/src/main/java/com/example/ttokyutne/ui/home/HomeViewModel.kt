@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlin.math.roundToLong
 
 private const val LOG_TAG = "Ttokyeonne"
 
@@ -49,11 +50,31 @@ class HomeViewModel(
     private suspend fun loadTodayStats() {
         val todayEvents = screenOnEventRepository.getTodayEvents()
         val lastEvent = screenOnEventRepository.getLastEvent()
+        val intervalEvents = todayEvents.mapNotNull { it.intervalSeconds }
+        val todayAnalysis = TodayAnalysisUiState(
+            totalScreenOnCount = todayEvents.size,
+            averageIntervalSeconds = intervalEvents.takeIf { it.isNotEmpty() }
+                ?.average()
+                ?.roundToLong(),
+            shortestIntervalSeconds = intervalEvents.minOrNull(),
+            recheckWithinTenMinutesCount = intervalEvents.count { it <= 600L },
+            recentRecords = todayEvents
+                .asReversed()
+                .take(5)
+                .map { event ->
+                    RecentScreenOnRecordUiState(
+                        id = event.id,
+                        screenOnTime = event.screenOnTime,
+                        intervalSeconds = event.intervalSeconds
+                    )
+                }
+        )
 
         _uiState.update {
             it.copy(
                 todayScreenOnCount = todayEvents.size,
-                lastIntervalSeconds = lastEvent?.intervalSeconds
+                lastIntervalSeconds = lastEvent?.intervalSeconds,
+                todayAnalysis = todayAnalysis
             )
         }
 
