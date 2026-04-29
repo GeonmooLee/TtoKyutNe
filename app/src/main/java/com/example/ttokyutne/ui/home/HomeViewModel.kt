@@ -13,7 +13,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-private const val LOG_TAG = "TtokDb"
+private const val LOG_TAG = "Ttokyeonne"
 
 class HomeViewModel(
     private val screenOnEventRepository: ScreenOnEventRepository
@@ -29,11 +29,14 @@ class HomeViewModel(
         viewModelScope.launch {
             _uiState.update { it.copy(isSavingTestEvent = true) }
 
-            val insertedId = screenOnEventRepository.recordTestEvent()
+            val recordedEvent = screenOnEventRepository.recordTestEvent()
             loadTodayStats()
 
             _uiState.update { it.copy(isSavingTestEvent = false) }
-            Log.d(LOG_TAG, "Inserted test screen_on_event id=$insertedId")
+            Log.d(
+                LOG_TAG,
+                "Inserted test screen_on_event id=${recordedEvent.id}, intervalSeconds=${recordedEvent.intervalSeconds}"
+            )
         }
     }
 

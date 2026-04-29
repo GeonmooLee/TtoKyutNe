@@ -196,7 +196,7 @@ private fun ScreenCheckPreview(lastIntervalSeconds: Long?) {
                     color = Color(0xFF9FC6BD)
                 )
                 Text(
-                    text = formatIntervalText(lastIntervalSeconds),
+                    text = formatIntervalSeconds(lastIntervalSeconds),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = Color.White
@@ -225,7 +225,7 @@ private fun TodayMetrics(
         )
         MetricTile(
             title = "마지막 재확인 간격",
-            value = formatIntervalText(lastIntervalSeconds),
+            value = formatIntervalSeconds(lastIntervalSeconds),
             caption = if (lastIntervalSeconds == null) "간격 계산 전" else "직전 확인과의 간격",
             containerColor = Blue,
             accentColor = BlueInk,
@@ -391,9 +391,9 @@ private fun formatCountText(count: Int): String {
     return if (count == 0) "기록 전" else "${count}회"
 }
 
-private fun formatIntervalText(intervalSeconds: Long?): String {
+private fun formatIntervalSeconds(intervalSeconds: Long?): String {
     return when {
-        intervalSeconds == null -> "기록 전"
+        intervalSeconds == null -> "첫 기록이에요"
         intervalSeconds < 60 -> "${intervalSeconds}초"
         else -> {
             val minutes = intervalSeconds / 60
