@@ -49,7 +49,11 @@ private val Warm = Color(0xFFFFECE3)
 private val WarmInk = Color(0xFFB45731)
 
 @Composable
-fun HomeScreen(modifier: Modifier = Modifier) {
+fun HomeScreen(
+    uiState: HomeUiState = HomeUiState(),
+    onRecordTestEvent: () -> Unit = {},
+    modifier: Modifier = Modifier
+) {
     Scaffold(
         modifier = modifier.fillMaxSize(),
         containerColor = Canvas
@@ -63,10 +67,17 @@ fun HomeScreen(modifier: Modifier = Modifier) {
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             AppHeader()
-            HeroSection()
-            TodayMetrics()
+            HeroSection(lastIntervalSeconds = uiState.lastIntervalSeconds)
+            TodayMetrics(
+                todayScreenOnCount = uiState.todayScreenOnCount,
+                lastIntervalSeconds = uiState.lastIntervalSeconds
+            )
             ReassurancePanel()
             ActionButtons()
+            DeveloperTestButton(
+                isSaving = uiState.isSavingTestEvent,
+                onRecordTestEvent = onRecordTestEvent
+            )
             Spacer(modifier = Modifier.height(4.dp))
         }
     }
@@ -109,7 +120,7 @@ private fun AppHeader() {
 }
 
 @Composable
-private fun HeroSection() {
+private fun HeroSection(lastIntervalSeconds: Long?) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(8.dp),
@@ -146,13 +157,13 @@ private fun HeroSection() {
                 )
             }
 
-            ScreenCheckPreview()
+            ScreenCheckPreview(lastIntervalSeconds = lastIntervalSeconds)
         }
     }
 }
 
 @Composable
-private fun ScreenCheckPreview() {
+private fun ScreenCheckPreview(lastIntervalSeconds: Long?) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(8.dp),
@@ -185,7 +196,7 @@ private fun ScreenCheckPreview() {
                     color = Color(0xFF9FC6BD)
                 )
                 Text(
-                    text = "아직 기록 없음",
+                    text = formatIntervalText(lastIntervalSeconds),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = Color.White
@@ -196,23 +207,26 @@ private fun ScreenCheckPreview() {
 }
 
 @Composable
-private fun TodayMetrics() {
+private fun TodayMetrics(
+    todayScreenOnCount: Int,
+    lastIntervalSeconds: Long?
+) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         MetricTile(
-            title = "오늘 켠 횟수",
-            value = "기록 전",
-            caption = "첫 확인 대기",
+            title = "오늘 화면 켠 횟수",
+            value = formatCountText(todayScreenOnCount),
+            caption = if (todayScreenOnCount == 0) "첫 확인 대기" else "테스트 이벤트 반영됨",
             containerColor = Color.White,
             accentColor = Forest,
             modifier = Modifier.weight(1f)
         )
         MetricTile(
-            title = "마지막 간격",
-            value = "기록 전",
-            caption = "간격 계산 전",
+            title = "마지막 재확인 간격",
+            value = formatIntervalText(lastIntervalSeconds),
+            caption = if (lastIntervalSeconds == null) "간격 계산 전" else "직전 확인과의 간격",
             containerColor = Blue,
             accentColor = BlueInk,
             modifier = Modifier.weight(1f)
@@ -343,6 +357,48 @@ private fun ActionButtons() {
             )
         ) {
             Text(text = "설정", fontWeight = FontWeight.Bold)
+        }
+    }
+}
+
+@Composable
+private fun DeveloperTestButton(
+    isSaving: Boolean,
+    onRecordTestEvent: () -> Unit
+) {
+    Button(
+        onClick = onRecordTestEvent,
+        enabled = !isSaving,
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(52.dp),
+        shape = RoundedCornerShape(8.dp),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = Ink,
+            contentColor = Color.White,
+            disabledContainerColor = Color(0xFF98A2B3),
+            disabledContentColor = Color.White
+        )
+    ) {
+        Text(
+            text = if (isSaving) "저장 중" else "개발용 테스트 이벤트 기록",
+            fontWeight = FontWeight.Bold
+        )
+    }
+}
+
+private fun formatCountText(count: Int): String {
+    return if (count == 0) "기록 전" else "${count}회"
+}
+
+private fun formatIntervalText(intervalSeconds: Long?): String {
+    return when {
+        intervalSeconds == null -> "기록 전"
+        intervalSeconds < 60 -> "${intervalSeconds}초"
+        else -> {
+            val minutes = intervalSeconds / 60
+            val seconds = intervalSeconds % 60
+            if (seconds == 0L) "${minutes}분" else "${minutes}분 ${seconds}초"
         }
     }
 }
