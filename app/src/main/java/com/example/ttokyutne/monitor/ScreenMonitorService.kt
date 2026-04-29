@@ -11,6 +11,7 @@ import android.os.IBinder
 import android.util.Log
 import com.example.ttokyutne.data.local.AppDatabase
 import com.example.ttokyutne.data.repository.ScreenOnEventRepository
+import com.example.ttokyutne.data.repository.SettingsRepository
 import com.example.ttokyutne.notification.NotificationHelper
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -20,14 +21,19 @@ import kotlinx.coroutines.launch
 
 private const val LOG_TAG = "Ttokyeonne"
 private const val MONITOR_NOTIFICATION_ID = 1001
-private const val RECHECK_ALERT_THRESHOLD_SECONDS = 600L
 
 class ScreenMonitorService : Service() {
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val notificationHelper by lazy { NotificationHelper(this) }
+    private val database by lazy { AppDatabase.getInstance(applicationContext) }
     private val screenOnEventRepository by lazy {
-        ScreenOnEventRepository(
-            AppDatabase.getInstance(applicationContext).screenOnEventDao()
+        ScreenOnEventRepository(database.screenOnEventDao())
+    }
+    private val settingsRepository by lazy {
+        SettingsRepository(
+            userSettingsDao = database.userSettingsDao(),
+            screenOnEventDao = database.screenOnEventDao(),
+            phraseHistoryDao = database.phraseHistoryDao()
         )
     }
     private var receiverRegistered = false
@@ -104,22 +110,32 @@ class ScreenMonitorService : Service() {
         }
     }
 
-    private fun showRecheckAlertIfNeeded(intervalSeconds: Long?) {
+    private suspend fun showRecheckAlertIfNeeded(intervalSeconds: Long?) {
         when {
             intervalSeconds == null -> {
                 Log.d(LOG_TAG, "Recheck alert skipped: first screen-on event")
             }
 
-            intervalSeconds <= RECHECK_ALERT_THRESHOLD_SECONDS -> {
+            else -> {
+                val settings = settingsRepository.getSettings()
+                if (!settings.notificationEnabled) {
+                    Log.d(LOG_TAG, "Recheck alert skipped: notificationEnabled=false")
+                    return
+                }
+
+                if (intervalSeconds > settings.minIntervalSeconds) {
+                    Log.d(
+                        LOG_TAG,
+                        "Recheck alert skipped: intervalSeconds=$intervalSeconds, minIntervalSeconds=${settings.minIntervalSeconds}"
+                    )
+                    return
+                }
+
                 val shown = notificationHelper.showRecheckAlert(intervalSeconds)
                 Log.d(
                     LOG_TAG,
-                    "Recheck alert ${if (shown) "shown" else "skipped: notification permission missing"}, intervalSeconds=$intervalSeconds"
+                    "Recheck alert ${if (shown) "shown" else "skipped: notification permission missing"}, intervalSeconds=$intervalSeconds, minIntervalSeconds=${settings.minIntervalSeconds}"
                 )
-            }
-
-            else -> {
-                Log.d(LOG_TAG, "Recheck alert skipped: intervalSeconds=$intervalSeconds")
             }
         }
     }

@@ -1,10 +1,13 @@
 package com.example.ttokyutne.ui.home
 
+import com.example.ttokyutne.ui.settings.SettingsUiState
+
 data class HomeUiState(
     val todayScreenOnCount: Int = 0,
     val lastIntervalSeconds: Long? = null,
     val isSavingTestEvent: Boolean = false,
-    val todayAnalysis: TodayAnalysisUiState = TodayAnalysisUiState()
+    val todayAnalysis: TodayAnalysisUiState = TodayAnalysisUiState(),
+    val settings: SettingsUiState = SettingsUiState()
 )
 
 data class TodayAnalysisUiState(

@@ -53,6 +53,7 @@ fun HomeScreen(
     uiState: HomeUiState = HomeUiState(),
     notificationPermissionGranted: Boolean = true,
     onOpenTodayAnalysis: () -> Unit = {},
+    onOpenSettings: () -> Unit = {},
     onRecordTestEvent: () -> Unit = {},
     onStartScreenMonitor: () -> Unit = {},
     onRequestNotificationPermission: () -> Unit = {},
@@ -82,7 +83,10 @@ fun HomeScreen(
                 lastIntervalSeconds = uiState.lastIntervalSeconds
             )
             ReassurancePanel()
-            ActionButtons(onOpenTodayAnalysis = onOpenTodayAnalysis)
+            ActionButtons(
+                onOpenTodayAnalysis = onOpenTodayAnalysis,
+                onOpenSettings = onOpenSettings
+            )
             ScreenMonitorButton(onStartScreenMonitor = onStartScreenMonitor)
             DeveloperTestButton(
                 isSaving = uiState.isSavingTestEvent,
@@ -375,7 +379,8 @@ private fun ReassurancePanel() {
 
 @Composable
 private fun ActionButtons(
-    onOpenTodayAnalysis: () -> Unit
+    onOpenTodayAnalysis: () -> Unit,
+    onOpenSettings: () -> Unit
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -396,7 +401,7 @@ private fun ActionButtons(
             Text(text = "오늘 분석", fontWeight = FontWeight.Bold)
         }
         OutlinedButton(
-            onClick = {},
+            onClick = onOpenSettings,
             modifier = Modifier
                 .weight(1f)
                 .height(52.dp),

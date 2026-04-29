@@ -3,8 +3,10 @@ package com.example.ttokyutne
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.provider.Settings
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.result.ActivityResultLauncher
@@ -21,13 +23,15 @@ import com.example.ttokyutne.monitor.ScreenMonitorService
 import com.example.ttokyutne.ui.analysis.TodayAnalysisScreen
 import com.example.ttokyutne.ui.home.HomeScreen
 import com.example.ttokyutne.ui.home.HomeViewModel
+import com.example.ttokyutne.ui.settings.SettingsScreen
 import com.example.ttokyutne.ui.theme.TtoKyutNeTheme
 
 private const val LOG_TAG = "Ttokyeonne"
 
 private enum class AppScreen {
     Home,
-    TodayAnalysis
+    TodayAnalysis,
+    Settings
 }
 
 class MainActivity : ComponentActivity() {
@@ -67,6 +71,7 @@ class MainActivity : ComponentActivity() {
                             uiState = uiState,
                             notificationPermissionGranted = notificationPermissionGranted,
                             onOpenTodayAnalysis = ::openTodayAnalysis,
+                            onOpenSettings = ::openSettings,
                             onRecordTestEvent = homeViewModel::recordTestEvent,
                             onStartScreenMonitor = ::startScreenMonitorService,
                             onRequestNotificationPermission = ::requestNotificationPermission
@@ -77,6 +82,18 @@ class MainActivity : ComponentActivity() {
                         TodayAnalysisScreen(
                             analysis = uiState.todayAnalysis,
                             onBack = { currentScreen = AppScreen.Home }
+                        )
+                    }
+
+                    AppScreen.Settings -> {
+                        SettingsScreen(
+                            settings = uiState.settings,
+                            notificationPermissionGranted = notificationPermissionGranted,
+                            onBack = { currentScreen = AppScreen.Home },
+                            onNotificationEnabledChange = homeViewModel::updateNotificationEnabled,
+                            onMinIntervalSecondsChange = homeViewModel::updateMinIntervalSeconds,
+                            onDeleteAllData = homeViewModel::deleteAllAppData,
+                            onOpenNotificationSettings = ::openNotificationSettings
                         )
                     }
                 }
@@ -112,6 +129,24 @@ class MainActivity : ComponentActivity() {
     private fun openTodayAnalysis() {
         homeViewModel.refreshTodayStats()
         currentScreen = AppScreen.TodayAnalysis
+    }
+
+    private fun openSettings() {
+        homeViewModel.refreshSettings()
+        currentScreen = AppScreen.Settings
+    }
+
+    private fun openNotificationSettings() {
+        val intent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
+                putExtra(Settings.EXTRA_APP_PACKAGE, packageName)
+            }
+        } else {
+            Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                data = Uri.parse("package:$packageName")
+            }
+        }
+        startActivity(intent)
     }
 
     private fun requestNotificationPermission() {
