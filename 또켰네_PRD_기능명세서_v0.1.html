@@ -1,0 +1,105 @@
+<!DOCTYPE html><html lang="ko"><head><meta charset="utf-8"><title>또켰네!! PRD 및 기능명세서</title><style>
+@page {
+  size: A4;
+  margin: 16mm 14mm 17mm 14mm;
+  @bottom-right {
+    content: "또켰네 사이드 프로젝트 초안 | " counter(page);
+    font-family: "Nanum Gothic", sans-serif;
+    font-size: 8pt;
+    color: #9CA3AF;
+  }
+}
+* { box-sizing: border-box; }
+body {
+  font-family: "Nanum Gothic", "Noto Sans CJK KR", sans-serif;
+  color: #202124;
+  line-height: 1.55;
+  font-size: 10pt;
+}
+h1 {
+  font-size: 16pt;
+  margin: 20px 0 8px;
+  color: #1f2937;
+  page-break-after: avoid;
+}
+h2 {
+  font-size: 13pt;
+  margin: 16px 0 6px;
+  color: #374151;
+  page-break-after: avoid;
+}
+h3 {
+  font-size: 11pt;
+  margin: 12px 0 4px;
+  color: #374151;
+  page-break-after: avoid;
+}
+.title {
+  text-align: center;
+  font-size: 25pt;
+  font-weight: 700;
+  color: #1f2937;
+  margin-top: 10px;
+  margin-bottom: 6px;
+}
+.subtitle {
+  text-align: center;
+  color: #5f6368;
+  font-size: 12pt;
+  margin-bottom: 6px;
+}
+.meta {
+  text-align: center;
+  color: #6b7280;
+  font-size: 8.5pt;
+  margin-bottom: 18px;
+}
+.callout {
+  border: 1px solid #D0D7DE;
+  background: #F6F8FA;
+  border-radius: 8px;
+  padding: 11px 13px;
+  margin: 10px 0 14px;
+  page-break-inside: avoid;
+}
+.callout.yellow {
+  background: #FFF8E1;
+  border-color: #F0C36D;
+}
+.callout-title {
+  font-weight: 700;
+  margin-bottom: 5px;
+  color: #111827;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 7px 0 14px;
+  font-size: 8.3pt;
+}
+th {
+  background: #2F5597;
+  color: white;
+  font-weight: 700;
+  padding: 6px 7px;
+  border: 1px solid #D0D7DE;
+  text-align: left;
+}
+td {
+  padding: 6px 7px;
+  border: 1px solid #D0D7DE;
+  vertical-align: top;
+}
+tr:nth-child(even) td { background: #F8FAFC; }
+p { margin: 0 0 8px; }
+ul, ol { margin-top: 4px; margin-bottom: 10px; padding-left: 20px; }
+li { margin-bottom: 4px; }
+.small { font-size: 8.5pt; color: #374151; }
+.page-break { page-break-before: always; }
+.nowrap { white-space: nowrap; }
+</style></head><body>
+    <div class="title">또켰네 PRD 및 기능명세서</div>
+    <div class="subtitle">v0.1 Android MVP 개발용 문서</div>
+    <div class="meta">Draft v0.1 / 개발 시작 전 검토용 / 작성일: 2026-04-29</div>
+    <div class="callout"><div class="callout-title">문서 목적</div><div>이 문서는 Codex 또는 AI 코딩 도구에 전달하기 전, 사람이 먼저 개발 범위와 우선순위를 확인하기 위한 문서입니다. v0.1은 “화면을 다시 켠 순간을 자각시키는 앱”에만 집중합니다.</div></div><h1>1. 제품 요구사항 요약</h1><table><thead><tr><th>항목</th><th>내용</th></tr></thead><tbody><tr><td>제품명</td><td>또켰네</td></tr><tr><td>버전</td><td>v0.1 MVP</td></tr><tr><td>플랫폼</td><td>Android Mobile</td></tr><tr><td>핵심 목표</td><td>사용자가 화면을 다시 켠 순간과 직전 확인 이후의 간격을 자각하게 함</td></tr><tr><td>핵심 사용자</td><td>알림 불안, 반복 확인 습관, 집중력 저하를 경험하는 학생/직장인</td></tr><tr><td>개발 원칙</td><td>단순 구현, 로컬 저장, 최소 권한, 비강제적 자기성찰</td></tr></tbody></table><h1>2. v0.1 MVP 포함/제외 범위</h1><table><thead><tr><th>분류</th><th>기능</th><th>상태</th><th>비고</th></tr></thead><tbody><tr><td>Core</td><td>화면 켜짐 감지</td><td>Must</td><td>사용자가 화면을 켠 시점을 기록</td></tr><tr><td>Core</td><td>재확인 간격 계산</td><td>Must</td><td>직전 screen_on_event와 현재 시간을 비교</td></tr><tr><td>Core</td><td>감성 문구 알림 표시</td><td>Must</td><td>설정 조건에 맞을 때 상단 알림 또는 앱 카드 표시</td></tr><tr><td>Core</td><td>로컬 DB 저장</td><td>Must</td><td>screen_on_event, phrase_history, user_settings</td></tr><tr><td>Core</td><td>오늘 분석 화면</td><td>Must</td><td>오늘 화면 켠 횟수, 최단/평균 간격, 10분 이내 횟수</td></tr><tr><td>Support</td><td>설정 화면</td><td>Should</td><td>알림 on/off, 최소 알림 간격, 데이터 삭제</td></tr><tr><td>Support</td><td>온보딩 화면</td><td>Should</td><td>앱 목적과 권한 안내</td></tr><tr><td>Later</td><td>주간/월간/연간 분석</td><td>Exclude</td><td>v0.2 이후</td></tr><tr><td>Later</td><td>알림 몰아보기</td><td>Exclude</td><td>v0.3 이후</td></tr><tr><td>Later</td><td>무료 LLM API 문구 생성</td><td>Exclude</td><td>v0.2 이후 실험</td></tr><tr><td>Later</td><td>로그인/서버/클라우드</td><td>Exclude</td><td>개인정보 보호와 개발 단순화 목적</td></tr></tbody></table><h1>3. 사용자 플로우</h1><ol><li>사용자가 앱을 설치하고 첫 실행한다.</li><li>온보딩에서 앱의 목적을 확인한다: “폰을 막는 앱이 아니라, 왜 또 켰는지 알아차리게 돕는 앱입니다.”</li><li>화면 켜짐 감지와 알림 표시를 위해 필요한 권한 안내를 확인한다.</li><li>사용자가 알림 조건을 설정한다. 기본값은 “10분 이내 다시 켰을 때만 문구 표시”이다.</li><li>사용자가 폰 화면을 끈 뒤 다시 켠다.</li><li>앱은 현재 화면 켜짐 시각을 기록하고, 직전 화면 켜짐과의 간격을 계산한다.</li><li>조건에 해당하면 감성 문구를 표시한다. ('직전 화면 켜짐과의 간격은 감성 문구와 상관없이 항상 표시된다)</li><li>사용자는 홈/오늘 분석 화면에서 오늘의 반복 확인 패턴을 확인한다.</li></ol><h1>4. 화면 목록 및 IA</h1><table><thead><tr><th>화면</th><th>목적</th><th>주요 요소</th><th>우선순위</th></tr></thead><tbody><tr><td>온보딩</td><td>앱의 문제의식과 권한 필요성을 설명</td><td>소개 카드, 권한 안내, 시작하기 버튼</td><td>Should</td></tr><tr><td>홈</td><td>오늘 상태를 한눈에 보여줌</td><td>오늘 켠 횟수, 마지막 간격, 핵심 문구, 분석 진입 버튼</td><td>Must</td></tr><tr><td>오늘 분석</td><td>반복 확인 패턴을 숫자로 보여줌</td><td>총 횟수, 평균 간격, 최단 간격, 10분 이내 횟수</td><td>Must</td></tr><tr><td>설정</td><td>알림 조건과 데이터 관리</td><td>알림 on/off, 최소 간격, 데이터 삭제</td><td>Should</td></tr><tr><td>문구 기록</td><td>최근 표시된 문구 확인</td><td>문구 목록, 표시 시각, 관련 간격</td><td>Could</td></tr></tbody></table><h1>5. 화면별 기능명세</h1><h2>5.1 온보딩 화면</h2><table><thead><tr><th>항목</th><th>명세</th></tr></thead><tbody><tr><td>목적</td><td>처음 사용자에게 앱의 정체성과 권한 필요성을 설명</td></tr><tr><td>주요 UI</td><td>앱 소개 문구, 문제 정의 카드, 개인정보 보호 안내, 시작하기 버튼</td></tr><tr><td>사용자 액션</td><td>시작하기 클릭, 권한 설정으로 이동, 건너뛰기</td></tr><tr><td>시스템 반응</td><td>시작하기 클릭 시 권한 안내 화면 또는 홈 화면으로 이동</td></tr><tr><td>예외 상황</td><td>권한 거부 시 “기능이 제한될 수 있습니다” 안내</td></tr></tbody></table><h2>5.2 홈 화면</h2><table><thead><tr><th>항목</th><th>명세</th></tr></thead><tbody><tr><td>목적</td><td>오늘의 반복 확인 상태를 가장 간단하게 보여줌</td></tr><tr><td>주요 UI</td><td>오늘 화면 켠 횟수 카드, 마지막 재확인 간격 카드, 오늘의 한 줄 문구, 오늘 분석 버튼, 설정 버튼</td></tr><tr><td>표시 데이터</td><td>today_screen_on_count, last_interval_seconds, shortest_interval_today</td></tr><tr><td>사용자 액션</td><td>오늘 분석 보기, 설정 열기</td></tr><tr><td>시스템 반응</td><td>로컬 DB에서 오늘 데이터를 집계해 카드 업데이트</td></tr><tr><td>예외 상황</td><td>기록이 없으면 “아직 오늘 기록이 없어요” 표시</td></tr></tbody></table><h2>5.3 오늘 분석 화면</h2><table><thead><tr><th>항목</th><th>명세</th></tr></thead><tbody><tr><td>목적</td><td>하루 동안의 화면 재확인 패턴을 숫자로 확인</td></tr><tr><td>주요 UI</td><td>총 화면 켠 횟수, 평균 재확인 간격, 최단 재확인 간격, 10분 이내 재확인 횟수, 시간대별 카드</td></tr><tr><td>계산 기준</td><td>오늘 00:00 이후 screen_on_event 전체</td></tr><tr><td>사용자 액션</td><td>기록 확인, 홈으로 돌아가기, 데이터 초기화 진입</td></tr><tr><td>시스템 반응</td><td>집계값 계산 후 표시</td></tr><tr><td>예외 상황</td><td>기록이 2개 미만이면 평균 간격 계산 불가 안내</td></tr></tbody></table><h2>5.4 설정 화면</h2><table><thead><tr><th>항목</th><th>명세</th></tr></thead><tbody><tr><td>목적</td><td>앱의 개입 강도와 데이터 관리를 사용자가 조정</td></tr><tr><td>주요 UI</td><td>감성 문구 알림 on/off, 최소 알림 간격 선택, 야간 문구 사용 여부, 전체 데이터 삭제 버튼</td></tr><tr><td>기본값</td><td>알림 사용 on, 최소 알림 간격 60초, 데이터 로컬 저장</td></tr><tr><td>사용자 액션</td><td>설정 변경, 데이터 삭제, 권한 설정 열기</td></tr><tr><td>시스템 반응</td><td>user_settings 업데이트</td></tr><tr><td>예외 상황</td><td>데이터 삭제는 확인 다이얼로그 후 실행</td></tr></tbody></table><h1>6. 기능별 요구사항</h1><table><thead><tr><th>ID</th><th>기능</th><th>요구사항</th><th>완료 기준</th></tr></thead><tbody><tr><td>F-01</td><td>화면 켜짐 감지</td><td>화면이 켜질 때마다 이벤트를 수신하고 현재 시각을 저장한다.</td><td>실제 기기에서 화면을 켤 때마다 기록 생성</td></tr><tr><td>F-02</td><td>간격 계산</td><td>이전 screen_on_event와 현재 이벤트의 차이를 초 단위로 계산한다.</td><td>첫 이벤트 예외 처리 및 이후 간격 정확도 확인</td></tr><tr><td>F-03</td><td>문구 선택</td><td>간격, 시간대, 최근 표시 이력을 기준으로 로컬 문구 중 하나를 선택한다.</td><td>같은 문구가 과도하게 반복되지 않음</td></tr><tr><td>F-04</td><td>알림 표시</td><td>설정 조건을 만족하면 감성 문구를 상단 알림 또는 앱 내 카드로 표시한다.</td><td>10분 이내 재확인 시 문구 표시</td></tr><tr><td>F-05</td><td>오늘 분석</td><td>오늘의 이벤트를 집계해 총 횟수, 평균, 최단, 10분 이내 횟수를 표시한다.</td><td>앱 화면 값과 DB 기록이 일치</td></tr><tr><td>F-06</td><td>설정 저장</td><td>사용자 설정을 로컬에 저장하고 앱 재시작 후에도 유지한다.</td><td>앱 재실행 후 설정 유지</td></tr></tbody></table><h1>7. 로컬 DB 구조 제안</h1><h2>7.1 screen_on_event</h2><table><thead><tr><th>필드명</th><th>타입</th><th>설명</th></tr></thead><tbody><tr><td>id</td><td>Integer / PK</td><td>고유 ID</td></tr><tr><td>screen_on_time</td><td>DateTime</td><td>화면이 켜진 시간</td></tr><tr><td>previous_screen_on_time</td><td>DateTime nullable</td><td>직전 화면 켜짐 시간</td></tr><tr><td>interval_seconds</td><td>Integer nullable</td><td>직전 켜짐과의 간격. 첫 기록은 null 가능</td></tr><tr><td>phrase_id</td><td>Integer nullable</td><td>표시된 문구 ID</td></tr><tr><td>created_at</td><td>DateTime</td><td>기록 생성 시간</td></tr></tbody></table><h2>7.2 phrase_history</h2><table><thead><tr><th>필드명</th><th>타입</th><th>설명</th></tr></thead><tbody><tr><td>id</td><td>Integer / PK</td><td>고유 ID</td></tr><tr><td>phrase_text</td><td>String</td><td>표시된 감성 문구</td></tr><tr><td>category</td><td>String</td><td>short_interval, night, frequent_day 등</td></tr><tr><td>shown_at</td><td>DateTime</td><td>문구 표시 시간</td></tr><tr><td>related_event_id</td><td>Integer</td><td>연결된 screen_on_event ID</td></tr></tbody></table><h2>7.3 user_settings</h2><table><thead><tr><th>필드명</th><th>타입</th><th>설명</th></tr></thead><tbody><tr><td>id</td><td>Integer / PK</td><td>고유 ID</td></tr><tr><td>notification_enabled</td><td>Boolean</td><td>감성 문구 알림 사용 여부</td></tr><tr><td>min_interval_seconds</td><td>Integer</td><td>몇 초 이내 재확인일 때 알림을 띄울지. 기본값 600</td></tr><tr><td>quiet_hours_enabled</td><td>Boolean</td><td>야간 알림 제한 여부</td></tr><tr><td>data_retention_days</td><td>Integer</td><td>데이터 보관 기간</td></tr><tr><td>updated_at</td><td>DateTime</td><td>설정 수정 시간</td></tr></tbody></table><h1>8. Android 구현 고려사항</h1><table><thead><tr><th>항목</th><th>고려사항</th><th>v0.1 방향</th></tr></thead><tbody><tr><td>화면 켜짐 감지</td><td>Android 버전과 제조사별 백그라운드 제한에 따라 동작 차이가 있을 수 있음</td><td>실제 기기에서 이벤트 수신 우선 검증</td></tr><tr><td>백그라운드 동작</td><td>앱이 꺼져 있거나 절전 모드일 때 동작 제한 가능</td><td>불필요한 상시 작업을 피하고 이벤트 기록 중심으로 설계</td></tr><tr><td>알림 표시</td><td>강제 팝업보다 사용자가 허용한 상단 알림이 안전</td><td>알림 권한 안내 후 조건부 알림 표시</td></tr><tr><td>배터리</td><td>상시 센싱처럼 보이면 배터리 우려 발생</td><td>화면 켜짐 이벤트와 짧은 DB 기록만 수행</td></tr><tr><td>권한 안내</td><td>사용자가 감시당한다고 느끼지 않도록 쉬운 설명 필요</td><td>권한 요청 전에 목적과 로컬 저장 원칙 안내</td></tr><tr><td>iOS 대응</td><td>화면 켜짐 감지와 알림 제어가 Android보다 제한적일 수 있음</td><td>v0.1은 Android 우선, iOS는 별도 검토</td></tr></tbody></table><h1>9. 개인정보 보호 요구사항</h1><table><thead><tr><th>원칙</th><th>명세</th></tr></thead><tbody><tr><td>로그인 없음</td><td>v0.1에서는 회원가입, 소셜 로그인, 계정 기능을 제공하지 않는다.</td></tr><tr><td>서버 없음</td><td>화면 켜짐 기록, 문구 이력, 설정은 모두 기기 내부에만 저장한다.</td></tr><tr><td>클라우드 동기화 없음</td><td>사용 기록을 외부 서버로 전송하지 않는다.</td></tr><tr><td>알림 내용 미저장</td><td>v0.3에서도 알림 본문 저장은 지양하고 앱 이름과 개수 중심으로 검토한다.</td></tr><tr><td>사용자 삭제권</td><td>설정 화면에서 전체 기록 삭제 기능을 제공한다.</td></tr><tr><td>최소 권한</td><td>MVP 동작에 꼭 필요한 권한만 요청한다.</td></tr></tbody></table><div class="callout"><div class="callout-title">사용자 안내 문구</div><div>또켰네는 화면을 다시 켠 간격을 계산하기 위해 화면 켜짐 상태를 감지합니다. 기록은 외부 서버로 전송되지 않고, 사용자의 기기 안에만 저장됩니다.</div></div><h1>10. 감성 문구 라이브러리 초안</h1><table><thead><tr><th>카테고리</th><th>문구 예시</th></tr></thead><tbody><tr><td>10분 이내</td><td>37초 만에 다시 켰어요. 지금 필요한 건 정보일까요, 안심일까요?</td></tr><tr><td>10분 이내</td><td>방금 확인했는데 다시 켰네요. 혹시 마음이 불안했나요?</td></tr><tr><td>5분 이내</td><td>조금 전에도 확인했어요. 지금은 잠깐 쉬어도 괜찮아요.</td></tr><tr><td>밤</td><td>오늘의 마지막 확인이어도 괜찮아요. 내일 봐도 늦지 않을 수 있어요.</td></tr><tr><td>자주 켠 날</td><td>오늘은 폰을 자주 찾았어요. 바빴던 걸까요, 불안했던 걸까요?</td></tr><tr><td>집중 중</td><td>지금 필요한 건 새 정보보다 다시 집중하는 힘일지도 몰라요.</td></tr><tr><td>알림 없음</td><td>새 알림이 없어도 확인하고 싶을 때가 있죠. 그 마음을 알아차려봐요.</td></tr></tbody></table><h1>11. 개발 순서</h1><table><thead><tr><th>순서</th><th>작업</th><th>완료 기준</th></tr></thead><tbody><tr><td>1</td><td>Android 프로젝트 생성 및 Git 연결</td><td>앱 실행, 기본 화면 표시, GitHub push 완료</td></tr><tr><td>2</td><td>로컬 DB 모델 작성</td><td>screen_on_event 저장/조회 가능</td></tr><tr><td>3</td><td>화면 켜짐 이벤트 감지 구현</td><td>실제 기기에서 화면 켤 때 이벤트 기록</td></tr><tr><td>4</td><td>재확인 간격 계산 구현</td><td>직전 이벤트와 현재 이벤트 간격 계산</td></tr><tr><td>5</td><td>감성 문구 로컬 리스트 구성</td><td>30-50개 문구 중 조건에 따라 선택</td></tr><tr><td>6</td><td>알림/카드 표시 구현</td><td>조건 충족 시 문구 표시</td></tr><tr><td>7</td><td>홈/오늘 분석 화면 구현</td><td>오늘 지표 표시</td></tr><tr><td>8</td><td>설정 화면 구현</td><td>알림 on/off, 최소 간격, 데이터 삭제</td></tr><tr><td>9</td><td>실제 기기 테스트</td><td>기록, 알림, 배터리, 권한 거부 테스트</td></tr></tbody></table><h1>12. 테스트 체크리스트</h1><table><thead><tr><th>테스트 항목</th><th>확인 내용</th></tr></thead><tbody><tr><td>화면 켜짐 감지</td><td>화면을 켤 때마다 기록이 저장되는가</td></tr><tr><td>첫 실행 예외</td><td>첫 기록일 때 interval_seconds가 오류 없이 처리되는가</td></tr><tr><td>간격 계산</td><td>30초, 1분, 5분 등 실제 간격과 계산값이 일치하는가</td></tr><tr><td>알림 조건</td><td>설정한 최소 간격 이내일 때만 문구가 뜨는가</td></tr><tr><td>문구 중복</td><td>같은 문구가 연속으로 과도하게 반복되지 않는가</td></tr><tr><td>오늘 분석</td><td>총 횟수, 평균, 최단 간격, 10분 이내 횟수가 정확한가</td></tr><tr><td>데이터 삭제</td><td>전체 기록 삭제 후 홈/분석 화면이 정상 상태로 돌아가는가</td></tr><tr><td>권한 거부</td><td>권한이 없을 때 안내 화면이 뜨는가</td></tr><tr><td>배터리</td><td>일상 사용 중 배터리 소모가 과도하지 않은가</td></tr><tr><td>불쾌감</td><td>문구가 사용자를 비난하는 느낌을 주지 않는가</td></tr></tbody></table><h1>13. Codex 작업 요청 방식</h1><div class="callout"><div class="callout-title">작업 원칙</div><div>Codex에게 “전체 앱을 한 번에 만들어줘”라고 요청하지 말고, 한 번에 하나의 기능만 맡기는 방식이 안전합니다. 매 기능 구현 후 Android Studio에서 실행 확인하고, 문제가 없을 때 Git에 저장합니다.</div></div><table><thead><tr><th>단계</th><th>Codex 요청 예시</th></tr></thead><tbody><tr><td>프로젝트 분석</td><td>이 Android 프로젝트 구조를 분석하고, 화면 켜짐 감지 기능을 추가하기 전에 수정해야 할 파일 목록을 알려줘. 아직 코드는 수정하지 마.</td></tr><tr><td>1개 기능 구현</td><td>v0.1 PRD 기준으로 화면 켜짐 이벤트를 기록하는 기능만 구현해줘. 로컬 DB에는 screen_on_event를 저장해줘.</td></tr><tr><td>검증 요청</td><td>방금 구현한 기능의 동작 흐름과 테스트 방법을 설명해줘. Android Studio에서 어떤 로그를 확인해야 하는지도 알려줘.</td></tr><tr><td>에러 수정</td><td>아래 빌드 에러를 보고 원인을 설명한 뒤, 최소 수정으로 해결해줘. 다른 기능은 건드리지 마.</td></tr><tr><td>Git 저장</td><td>이번 변경사항을 커밋하기 좋은 단위로 요약하고, 커밋 메시지를 제안해줘.</td></tr></tbody></table><h1>14. v0.1 완료 기준</h1><ul><li>실제 Android 기기에서 화면 켜짐 이벤트가 기록된다.</li><li>직전 화면 켜짐과 현재 화면 켜짐의 시간 차이가 초 단위로 계산된다.</li><li>10분 이내 재확인 등 설정 조건에 맞을 때 감성 문구가 표시된다.</li><li>오늘 분석 화면에서 총 횟수, 평균 간격, 최단 간격, 10분 이내 재확인 횟수가 표시된다.</li><li>로그인, 서버, 클라우드 없이 모든 데이터가 기기 내부에 저장된다.</li><li>사용자가 전체 데이터를 삭제할 수 있다.</li></ul>
+    </body></html>

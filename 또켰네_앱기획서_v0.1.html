@@ -1,0 +1,105 @@
+<!DOCTYPE html><html lang="ko"><head><meta charset="utf-8"><title>또켰네!! 앱 기획서</title><style>
+@page {
+  size: A4;
+  margin: 16mm 14mm 17mm 14mm;
+  @bottom-right {
+    content: "또켰네!! 사이드 프로젝트 초안 | " counter(page);
+    font-family: "Nanum Gothic", sans-serif;
+    font-size: 8pt;
+    color: #9CA3AF;
+  }
+}
+* { box-sizing: border-box; }
+body {
+  font-family: "Nanum Gothic", "Noto Sans CJK KR", sans-serif;
+  color: #202124;
+  line-height: 1.55;
+  font-size: 10pt;
+}
+h1 {
+  font-size: 16pt;
+  margin: 20px 0 8px;
+  color: #1f2937;
+  page-break-after: avoid;
+}
+h2 {
+  font-size: 13pt;
+  margin: 16px 0 6px;
+  color: #374151;
+  page-break-after: avoid;
+}
+h3 {
+  font-size: 11pt;
+  margin: 12px 0 4px;
+  color: #374151;
+  page-break-after: avoid;
+}
+.title {
+  text-align: center;
+  font-size: 25pt;
+  font-weight: 700;
+  color: #1f2937;
+  margin-top: 10px;
+  margin-bottom: 6px;
+}
+.subtitle {
+  text-align: center;
+  color: #5f6368;
+  font-size: 12pt;
+  margin-bottom: 6px;
+}
+.meta {
+  text-align: center;
+  color: #6b7280;
+  font-size: 8.5pt;
+  margin-bottom: 18px;
+}
+.callout {
+  border: 1px solid #D0D7DE;
+  background: #F6F8FA;
+  border-radius: 8px;
+  padding: 11px 13px;
+  margin: 10px 0 14px;
+  page-break-inside: avoid;
+}
+.callout.yellow {
+  background: #FFF8E1;
+  border-color: #F0C36D;
+}
+.callout-title {
+  font-weight: 700;
+  margin-bottom: 5px;
+  color: #111827;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 7px 0 14px;
+  font-size: 8.3pt;
+}
+th {
+  background: #2F5597;
+  color: white;
+  font-weight: 700;
+  padding: 6px 7px;
+  border: 1px solid #D0D7DE;
+  text-align: left;
+}
+td {
+  padding: 6px 7px;
+  border: 1px solid #D0D7DE;
+  vertical-align: top;
+}
+tr:nth-child(even) td { background: #F8FAFC; }
+p { margin: 0 0 8px; }
+ul, ol { margin-top: 4px; margin-bottom: 10px; padding-left: 20px; }
+li { margin-bottom: 4px; }
+.small { font-size: 8.5pt; color: #374151; }
+.page-break { page-break-before: always; }
+.nowrap { white-space: nowrap; }
+</style></head><body>
+    <div class="title">또켰네 앱 기획서</div>
+    <div class="subtitle">화면 재확인 습관 자각 및 개선 도구</div>
+    <div class="meta">Draft v0.1 / Android MVP 우선 / 작성일: 2026-04-29</div>
+    <div class="callout"><div class="callout-title">한 줄 정의</div><div>'또켰네'는 스마트폰을 오래 쓰는 문제보다, 짧은 간격으로 반복해서 다시 켜는 습관을 자각하게 만드는 앱입니다. 사용자가 화면을 다시 켠 순간을 포착하고, 이전 확인 이후 얼마나 시간이 지났는지 보여주어 “내가 왜 또 켰지?”를 부드럽게 돌아보게 합니다.</div></div><h1>1. 프로젝트 개요</h1><table><thead><tr><th>항목</th><th>내용</th></tr></thead><tbody><tr><td>앱 이름</td><td>또켰네</td></tr><tr><td>카테고리</td><td>생산성 / 디지털 웰빙 / 자기관리</td></tr><tr><td>1차 플랫폼</td><td>Android Mobile</td></tr><tr><td>1차 출시 목표</td><td>Google Play Store 내부 테스트 및 베타 배포</td></tr><tr><td>핵심 문제</td><td>연락과 알림을 놓칠지 모른다는 불안으로 짧은 간격마다 폰을 다시 확인하는 습관</td></tr><tr><td>핵심 해결</td><td>화면 재확인 간격을 숫자와 감성 문구로 보여주어 자각을 유도</td></tr><tr><td>MVP 원칙</td><td>차단보다 자각, 통제보다 관찰, 서버보다 로컬 저장</td></tr></tbody></table><h1>2. 문제 정의</h1><p>현대인은 카카오톡, DM, 이메일, SNS 알림 등으로 언제나 타인과 연결된 환경에서 살아갑니다. 이 초연결 환경은 빠른 소통과 편리함을 제공하지만, 동시에 “연락을 놓치면 안 된다”는 심리적 부담을 만듭니다.</p><p>사용자는 특별한 목적이 없어도 “혹시 답장이 왔을까?”, “내가 놓친 알림이 있지 않을까?”, “누군가 나를 찾고 있지는 않을까?”라는 불안감 때문에 반복적으로 화면을 켭니다. 이때 스마트폰은 필요한 순간에 쓰는 도구가 아니라, 불안을 해소하기 위해 습관적으로 확인하는 대상이 됩니다.</p><p>기존 디지털 웰빙 서비스는 하루 총 사용 시간, 앱별 사용량, 특정 앱 실행 횟수에 초점을 맞춥니다. 하지만 사용자가 실제로 겪는 문제는 단순히 오래 쓰는 것만이 아닙니다. 더 본질적인 문제는 몇십 초 혹은 몇 분 간격으로 현실의 흐름에서 계속 이탈한다는 점입니다.</p><div class="callout yellow"><div class="callout-title">핵심 문제 문장</div><div>현대인은 스마트폰을 오래 사용하는 것뿐만 아니라, 연락과 알림을 놓칠지 모른다는 불안으로 인해 짧은 간격으로 스마트폰을 반복 확인하며 현실에서 계속 이탈하고 있다.</div></div><h1>3. 서비스 컨셉</h1><table><thead><tr><th>컨셉 문장</th><th>의미</th></tr></thead><tbody><tr><td>재확인 간격을 보여주는 앱</td><td>마지막 화면 켜짐 이후 몇 초/몇 분 만에 다시 켰는지 보여줌</td></tr><tr><td>불안을 숫자로 보여주는 앱</td><td>무의식적 불안을 “37초 만에 다시 켬”처럼 관찰 가능한 지표로 전환</td></tr><tr><td>현실에서 이탈한 순간을 기록하는 앱</td><td>집중, 휴식, 수면 흐름이 끊긴 순간을 데이터로 남김</td></tr><tr><td>연락 불안을 관찰하는 앱</td><td>알림을 놓칠까 봐 반복 확인하는 행동을 부드럽게 인식시킴</td></tr><tr><td>어차피 지금은 아무 알림도 보이지 않습니다</td><td>향후 알림 몰아보기 기능의 핵심 메시지</td></tr></tbody></table><h1>4. 타깃 사용자</h1><table><thead><tr><th>사용자 유형</th><th>상황</th><th>앱이 주는 가치</th></tr></thead><tbody><tr><td>알림 불안 사용자</td><td>답장, DM, 업무 메시지를 놓칠까 봐 수시로 폰을 켬</td><td>불안에 의한 재확인 행동을 숫자로 인식</td></tr><tr><td>학생</td><td>공부 중 짧은 간격으로 폰을 확인해 집중이 끊김</td><td>다시 켠 순간에 멈춰볼 계기 제공</td></tr><tr><td>직장인</td><td>업무 중 카톡, 메일, 메신저 확인이 습관화됨</td><td>업무 흐름 이탈을 줄이는 자기 관찰 도구 제공</td></tr><tr><td>자기관리 관심자</td><td>스크린타임은 알지만 구체적으로 무엇을 고칠지 모름</td><td>“얼마나 자주 다시 켰는지”라는 새로운 지표 제공</td></tr></tbody></table><h1>5. 핵심 가치 제안</h1><table><thead><tr><th>가치</th><th>설명</th></tr></thead><tbody><tr><td>자각</td><td>사용자가 화면을 켠 직후 “방금 전에도 확인했는데 왜 다시 켰지?”를 떠올리게 함</td></tr><tr><td>비강제성</td><td>앱 사용을 막거나 꾸짖지 않고, 선택적으로 돌아볼 시간을 제공</td></tr><tr><td>숫자화</td><td>막연한 불안을 재확인 간격, 횟수, 평균 간격 등으로 구체화</td></tr><tr><td>개인정보 보호</td><td>로그인, 서버, 클라우드 없이 모든 데이터를 기기 내부에 저장</td></tr><tr><td>확장성</td><td>v0.3 이후 알림 몰아보기 기능으로 “확인하지 않아도 괜찮은 시간”을 제공</td></tr></tbody></table><h1>6. 주요 기능 요약</h1><table><thead><tr><th>기능</th><th>설명</th><th>버전</th></tr></thead><tbody><tr><td>화면 켜짐 감지</td><td>사용자가 스마트폰 화면을 켠 시점을 기록</td><td>v0.1</td></tr><tr><td>재확인 간격 계산</td><td>마지막 화면 켜짐 시점과 현재 시점을 비교</td><td>v0.1</td></tr><tr><td>감성 문구 표시</td><td>재확인 간격에 맞는 짧은 문구를 알림/카드로 표시</td><td>v0.1</td></tr><tr><td>오늘 분석</td><td>오늘 화면 켠 횟수, 최단 간격, 평균 간격, 10분 이내 재확인 횟수 표시</td><td>v0.1</td></tr><tr><td>주간 분석</td><td>요일별, 시간대별 반복 확인 패턴 제공</td><td>v0.2</td></tr><tr><td>알림 몰아보기</td><td>30분/1시간/2시간 동안 알림을 조용히 모은 뒤 한 번에 표시</td><td>v0.3</td></tr><tr><td>월간/연간 리포트</td><td>장기 패턴과 변화 추이를 요약</td><td>v1.0</td></tr></tbody></table><h1>7. 기능 로드맵</h1><table><thead><tr><th>버전</th><th>목표</th><th>포함 기능</th><th>제외/주의</th></tr></thead><tbody><tr><td>v0.1 - 2일 MVP</td><td>폰을 다시 켠 순간을 자각시키는 앱</td><td>화면 켜짐 감지, 재확인 간격 계산, 감성 문구 표시, 로컬 저장, 오늘 분석</td><td>알림 몰아보기, LLM, 주간 분석 제외</td></tr><tr><td>v0.2 - 1차 개선</td><td>앱을 지속 사용 가능하게 개선</td><td>주간 분석, 문구 카테고리, 설정, 온보딩</td><td>복잡한 차트보다 단순 카드 우선</td></tr><tr><td>v0.3 - 알림 몰아보기</td><td>폰을 켜도 알림이 없다는 확신 제공</td><td>알림 모드, 알림 조용히 모으기, 세션 종료 요약, 앱별 알림 목록</td><td>OS 권한과 개인정보 리스크 별도 검토</td></tr><tr><td>v1.0 - 출시 버전</td><td>Play Store 등록 가능한 완성도</td><td>월간/연간 리포트, 문구 라이브러리, 개인정보처리방침, 스토어 이미지</td><td>기능보다 안정성과 신뢰성 우선</td></tr></tbody></table><h1>8. v0.1 MVP 범위</h1><div class="callout"><div class="callout-title">MVP 원칙</div><div>v0.1의 목표는 “폰을 못 쓰게 막기”가 아니라 “다시 켠 순간을 알아차리게 하기”입니다. 사용자가 화면을 켠 사실, 이전 확인과의 간격, 그 순간의 감정적 질문을 확인할 수 있으면 MVP의 핵심은 달성됩니다.</div></div><table><thead><tr><th>구분</th><th>포함 여부</th><th>설명</th></tr></thead><tbody><tr><td>화면 켜짐 감지</td><td>포함</td><td>사용자가 화면을 켠 시점 기록</td></tr><tr><td>재확인 간격 계산</td><td>포함</td><td>직전 화면 켜짐과 현재 화면 켜짐의 차이 계산</td></tr><tr><td>감성 문구 표시</td><td>포함</td><td>비난이 아니라 성찰을 유도하는 문구 표시</td></tr><tr><td>오늘 분석</td><td>포함</td><td>오늘 기준 핵심 지표만 표시</td></tr><tr><td>로컬 DB 저장</td><td>포함</td><td>서버 없이 기기 내부 저장</td></tr><tr><td>알림 몰아보기</td><td>제외</td><td>v0.3 이후 검토</td></tr><tr><td>LLM 문구 생성</td><td>제외</td><td>MVP에서는 로컬 문구 라이브러리 사용</td></tr><tr><td>로그인/동기화</td><td>제외</td><td>개인정보 보호와 개발 단순화를 위해 제외</td></tr></tbody></table><h1>9. 사용자 시나리오</h1><table><thead><tr><th>상황</th><th>사용자 감정</th><th>앱 개입</th><th>표시 문구 예시</th></tr></thead><tbody><tr><td>공부 중</td><td>집중하려 하지만 답장이 왔을지 궁금함</td><td>10분 이내 재확인 시 알림 표시</td><td>42초 만에 다시 켰어요. 지금 필요한 건 정보일까요, 안심일까요?</td></tr><tr><td>업무 중</td><td>메일과 메신저를 놓치면 안 될 것 같음</td><td>짧은 간격 반복 확인을 기록</td><td>조금 전에도 확인했어요. 지금은 다시 일의 흐름으로 돌아가도 괜찮아요.</td></tr><tr><td>자기 전</td><td>잠들기 전에도 새 알림이 궁금함</td><td>밤 시간대 문구 표시</td><td>오늘의 마지막 확인이어도 괜찮아요. 내일 봐도 늦지 않을 수 있어요.</td></tr><tr><td>쉬는 시간</td><td>특별한 목적 없이 습관적으로 켬</td><td>오늘 분석에서 반복 패턴 표시</td><td>새 알림이 없어도 확인하고 싶을 때가 있죠. 그 마음을 알아차려봐요.</td></tr></tbody></table><h1>10. 감성 문구 방향</h1><p>문구는 사용자를 혼내거나 죄책감을 주면 안 됩니다. “또 켰네”라는 이름은 자칫 꾸짖는 느낌을 줄 수 있으므로, 실제 문구는 부드러운 질문형과 자기 관찰형을 중심으로 설계합니다.</p><table><thead><tr><th>상황</th><th>문구 예시</th></tr></thead><tbody><tr><td>10분 이내 재확인</td><td>37초 만에 다시 켰어요. 지금 필요한 건 정보일까요, 안심일까요?</td></tr><tr><td>10분 이내 재확인</td><td>방금 확인했는데 다시 켰네요. 혹시 마음이 불안했나요?</td></tr><tr><td>5분 이내 재확인</td><td>조금 전에도 확인했어요. 지금은 잠깐 쉬어도 괜찮아요.</td></tr><tr><td>밤 시간대</td><td>오늘의 마지막 확인이어도 괜찮아요. 내일 봐도 늦지 않을 수 있어요.</td></tr><tr><td>자주 켠 날</td><td>오늘은 폰을 자주 찾았어요. 바빴던 걸까요, 불안했던 걸까요?</td></tr><tr><td>집중 중</td><td>지금 필요한 건 새 정보보다 다시 집중하는 힘일지도 몰라요.</td></tr></tbody></table><h1>11. 성공 지표</h1><table><thead><tr><th>구분</th><th>MVP 성공 기준</th></tr></thead><tbody><tr><td>테스트 사용자</td><td>지인 또는 초기 사용자 5-10명에게 설치 테스트</td></tr><tr><td>기능 정상 작동</td><td>화면 켜짐 기록과 재확인 간격 계산이 실제 기기에서 정상 작동</td></tr><tr><td>자각 효과</td><td>테스트 사용자 70% 이상이 “내가 자주 다시 켠다는 걸 알게 됐다”고 응답</td></tr><tr><td>문구 만족도</td><td>테스트 사용자 70% 이상이 문구가 불쾌하지 않다고 응답</td></tr><tr><td>지속 사용</td><td>3일 이상 앱을 켜둔 사용자가 50% 이상</td></tr><tr><td>데이터 변화</td><td>3일 사용 후 10분 이내 재확인 횟수 감소 여부 관찰</td></tr></tbody></table><h1>12. 리스크와 대응</h1><table><thead><tr><th>리스크</th><th>설명</th><th>대응</th></tr></thead><tbody><tr><td>화면 켜짐 감지 안정성</td><td>기기/OS 버전에 따라 백그라운드 이벤트 감지가 달라질 수 있음</td><td>Android 우선 개발 후 실제 기기 중심 테스트</td></tr><tr><td>사용자 불쾌감</td><td>“또켰네”가 혼나는 느낌을 줄 수 있음</td><td>문구는 질문형, 공감형, 자기성찰형으로 설계</td></tr><tr><td>배터리 소모</td><td>백그라운드 감지가 배터리에 영향을 줄 수 있음</td><td>이벤트 기록만 최소 수행하고 불필요한 작업 제한</td></tr><tr><td>개인정보 우려</td><td>사용 습관 데이터가 민감하게 느껴질 수 있음</td><td>로그인 없음, 서버 없음, 로컬 저장, 삭제 기능 강조</td></tr><tr><td>기능 과다</td><td>초기부터 알림 몰아보기까지 넣으면 개발 난이도 증가</td><td>v0.1에서는 재확인 간격 자각에만 집중</td></tr></tbody></table><h1>13. 다음 액션 플랜</h1><ul><li>Android Studio에서 새 프로젝트를 생성하고 GitHub 저장소와 연결한다.</li><li>v0.1 MVP만 구현 대상으로 삼아 화면 켜짐 감지, 재확인 간격 계산, 로컬 저장부터 작업한다.</li><li>Codex에게 전체 구현을 한 번에 맡기지 말고, “프로젝트 구조 분석 -&gt; 1개 기능 구현 -&gt; 실행 확인 -&gt; 오류 수정 -&gt; Git 저장” 순서로 진행한다.</li><li>실제 기기에서 화면 켜짐 감지와 알림 표시가 안정적으로 동작하는지 가장 먼저 검증한다.</li><li>문구는 로컬 리스트 30-50개로 시작하고, LLM 문구 생성은 v0.2 이후 실험한다.</li></ul>
+    </body></html>
