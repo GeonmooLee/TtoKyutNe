@@ -51,8 +51,10 @@ private val WarmInk = Color(0xFFB45731)
 @Composable
 fun HomeScreen(
     uiState: HomeUiState = HomeUiState(),
+    notificationPermissionGranted: Boolean = true,
     onRecordTestEvent: () -> Unit = {},
     onStartScreenMonitor: () -> Unit = {},
+    onRequestNotificationPermission: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Scaffold(
@@ -69,6 +71,11 @@ fun HomeScreen(
         ) {
             AppHeader()
             HeroSection(lastIntervalSeconds = uiState.lastIntervalSeconds)
+            if (!notificationPermissionGranted) {
+                NotificationPermissionNotice(
+                    onRequestNotificationPermission = onRequestNotificationPermission
+                )
+            }
             TodayMetrics(
                 todayScreenOnCount = uiState.todayScreenOnCount,
                 lastIntervalSeconds = uiState.lastIntervalSeconds
@@ -81,6 +88,45 @@ fun HomeScreen(
                 onRecordTestEvent = onRecordTestEvent
             )
             Spacer(modifier = Modifier.height(4.dp))
+        }
+    }
+}
+
+@Composable
+private fun NotificationPermissionNotice(
+    onRequestNotificationPermission: () -> Unit
+) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(8.dp),
+        color = Color(0xFFFFF6E5),
+        border = BorderStroke(1.dp, Color(0xFFF5D59D))
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            Text(
+                text = "알림 권한이 필요해요",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = Ink
+            )
+            Text(
+                text = "화면을 다시 켠 순간에 또켰네 알림을 보려면 알림 권한을 허용해 주세요.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = Muted
+            )
+            Button(
+                onClick = onRequestNotificationPermission,
+                shape = RoundedCornerShape(8.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = WarmInk,
+                    contentColor = Color.White
+                )
+            ) {
+                Text(text = "알림 권한 허용", fontWeight = FontWeight.Bold)
+            }
         }
     }
 }

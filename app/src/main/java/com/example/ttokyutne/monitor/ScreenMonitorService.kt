@@ -1,9 +1,5 @@
 package com.example.ttokyutne.monitor
 
-import android.app.Notification
-import android.app.NotificationChannel
-import android.app.NotificationManager
-import android.app.PendingIntent
 import android.app.Service
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -13,10 +9,9 @@ import android.content.pm.ServiceInfo
 import android.os.Build
 import android.os.IBinder
 import android.util.Log
-import androidx.core.app.NotificationCompat
-import com.example.ttokyutne.MainActivity
 import com.example.ttokyutne.data.local.AppDatabase
 import com.example.ttokyutne.data.repository.ScreenOnEventRepository
+import com.example.ttokyutne.notification.NotificationHelper
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -24,11 +19,12 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 
 private const val LOG_TAG = "Ttokyeonne"
-private const val NOTIFICATION_CHANNEL_ID = "screen_monitor"
-private const val NOTIFICATION_ID = 1001
+private const val MONITOR_NOTIFICATION_ID = 1001
+private const val RECHECK_ALERT_THRESHOLD_SECONDS = 600L
 
 class ScreenMonitorService : Service() {
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private val notificationHelper by lazy { NotificationHelper(this) }
     private val screenOnEventRepository by lazy {
         ScreenOnEventRepository(
             AppDatabase.getInstance(applicationContext).screenOnEventDao()
@@ -46,13 +42,14 @@ class ScreenMonitorService : Service() {
                     LOG_TAG,
                     "ACTION_SCREEN_ON saved id=${recordedEvent.id}, intervalSeconds=${recordedEvent.intervalSeconds}"
                 )
+                showRecheckAlertIfNeeded(recordedEvent.intervalSeconds)
             }
         }
     }
 
     override fun onCreate() {
         super.onCreate()
-        createNotificationChannel()
+        notificationHelper.createNotificationChannels()
         startAsForegroundService()
         registerScreenOnReceiver()
         Log.d(LOG_TAG, "ScreenMonitorService created")
@@ -95,48 +92,35 @@ class ScreenMonitorService : Service() {
     }
 
     private fun startAsForegroundService() {
-        val notification = buildForegroundNotification()
+        val notification = notificationHelper.buildMonitorNotification()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
             startForeground(
-                NOTIFICATION_ID,
+                MONITOR_NOTIFICATION_ID,
                 notification,
                 ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
             )
         } else {
-            startForeground(NOTIFICATION_ID, notification)
+            startForeground(MONITOR_NOTIFICATION_ID, notification)
         }
     }
 
-    private fun buildForegroundNotification(): Notification {
-        val pendingIntent = PendingIntent.getActivity(
-            this,
-            0,
-            Intent(this, MainActivity::class.java),
-            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
-        )
+    private fun showRecheckAlertIfNeeded(intervalSeconds: Long?) {
+        when {
+            intervalSeconds == null -> {
+                Log.d(LOG_TAG, "Recheck alert skipped: first screen-on event")
+            }
 
-        return NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
-            .setSmallIcon(android.R.drawable.ic_dialog_info)
-            .setContentTitle("또켰네 실행 중")
-            .setContentText("또켰네가 화면 재확인 간격을 기록 중입니다")
-            .setContentIntent(pendingIntent)
-            .setOngoing(true)
-            .setPriority(NotificationCompat.PRIORITY_LOW)
-            .build()
-    }
+            intervalSeconds <= RECHECK_ALERT_THRESHOLD_SECONDS -> {
+                val shown = notificationHelper.showRecheckAlert(intervalSeconds)
+                Log.d(
+                    LOG_TAG,
+                    "Recheck alert ${if (shown) "shown" else "skipped: notification permission missing"}, intervalSeconds=$intervalSeconds"
+                )
+            }
 
-    private fun createNotificationChannel() {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
-
-        val channel = NotificationChannel(
-            NOTIFICATION_CHANNEL_ID,
-            "또켰네 실행 중",
-            NotificationManager.IMPORTANCE_LOW
-        ).apply {
-            description = "또켰네가 화면 재확인 간격을 기록 중입니다"
+            else -> {
+                Log.d(LOG_TAG, "Recheck alert skipped: intervalSeconds=$intervalSeconds")
+            }
         }
-
-        val notificationManager = getSystemService(NotificationManager::class.java)
-        notificationManager.createNotificationChannel(channel)
     }
 }
