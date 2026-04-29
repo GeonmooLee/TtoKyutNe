@@ -10,6 +10,7 @@ import android.os.Build
 import android.os.IBinder
 import android.util.Log
 import com.example.ttokyutne.data.local.AppDatabase
+import com.example.ttokyutne.data.repository.PhraseRepository
 import com.example.ttokyutne.data.repository.ScreenOnEventRepository
 import com.example.ttokyutne.data.repository.SettingsRepository
 import com.example.ttokyutne.notification.NotificationHelper
@@ -36,6 +37,9 @@ class ScreenMonitorService : Service() {
             phraseHistoryDao = database.phraseHistoryDao()
         )
     }
+    private val phraseRepository by lazy {
+        PhraseRepository(database.phraseHistoryDao())
+    }
     private var receiverRegistered = false
 
     private val screenOnReceiver = object : BroadcastReceiver() {
@@ -48,7 +52,10 @@ class ScreenMonitorService : Service() {
                     LOG_TAG,
                     "ACTION_SCREEN_ON saved id=${recordedEvent.id}, intervalSeconds=${recordedEvent.intervalSeconds}"
                 )
-                showRecheckAlertIfNeeded(recordedEvent.intervalSeconds)
+                showRecheckAlertIfNeeded(
+                    screenOnEventId = recordedEvent.id,
+                    intervalSeconds = recordedEvent.intervalSeconds
+                )
             }
         }
     }
@@ -110,7 +117,10 @@ class ScreenMonitorService : Service() {
         }
     }
 
-    private suspend fun showRecheckAlertIfNeeded(intervalSeconds: Long?) {
+    private suspend fun showRecheckAlertIfNeeded(
+        screenOnEventId: Long,
+        intervalSeconds: Long?
+    ) {
         when {
             intervalSeconds == null -> {
                 Log.d(LOG_TAG, "Recheck alert skipped: first screen-on event")
@@ -131,10 +141,29 @@ class ScreenMonitorService : Service() {
                     return
                 }
 
-                val shown = notificationHelper.showRecheckAlert(intervalSeconds)
+                if (!notificationHelper.canPostNotifications()) {
+                    Log.d(
+                        LOG_TAG,
+                        "Recheck alert skipped: notification permission missing, intervalSeconds=$intervalSeconds"
+                    )
+                    return
+                }
+
+                val todayScreenOnCount = screenOnEventRepository.getTodayEvents().size
+                val selectedPhrase = phraseRepository.selectPhrase(
+                    intervalSeconds = intervalSeconds,
+                    todayScreenOnCount = todayScreenOnCount
+                )
+                val shown = notificationHelper.showRecheckAlert(selectedPhrase.message)
+                if (shown) {
+                    phraseRepository.saveSelectedPhrase(
+                        phraseId = selectedPhrase.phrase.id,
+                        screenOnEventId = screenOnEventId
+                    )
+                }
                 Log.d(
                     LOG_TAG,
-                    "Recheck alert ${if (shown) "shown" else "skipped: notification permission missing"}, intervalSeconds=$intervalSeconds, minIntervalSeconds=${settings.minIntervalSeconds}"
+                    "Recheck alert shown=$shown, phraseId=${selectedPhrase.phrase.id}, category=${selectedPhrase.phrase.category}, intervalSeconds=$intervalSeconds, minIntervalSeconds=${settings.minIntervalSeconds}"
                 )
             }
         }

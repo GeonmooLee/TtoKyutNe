@@ -59,11 +59,10 @@ class NotificationHelper(
     }
 
     @SuppressLint("MissingPermission")
-    fun showRecheckAlert(intervalSeconds: Long): Boolean {
+    fun showRecheckAlert(contentText: String): Boolean {
         if (!canPostNotifications()) return false
 
         val now = System.currentTimeMillis()
-        val contentText = buildRecheckMessage(intervalSeconds, now)
         val notification = NotificationCompat.Builder(context, RECHECK_ALERT_CHANNEL_ID)
             .setSmallIcon(android.R.drawable.ic_dialog_info)
             .setContentTitle("또켰네")
@@ -101,33 +100,4 @@ class NotificationHelper(
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
     }
-
-    private fun buildRecheckMessage(intervalSeconds: Long, nowMillis: Long): String {
-        val interval = formatIntervalSeconds(intervalSeconds)
-        val phrase = recheckPhrases[(nowMillis / 1000L % recheckPhrases.size).toInt()]
-        return if (phrase.contains("{interval}")) {
-            phrase.replace("{interval}", interval)
-        } else {
-            "$interval 만에 다시 켰어요. $phrase"
-        }
-    }
-
-    private fun formatIntervalSeconds(intervalSeconds: Long): String {
-        return when {
-            intervalSeconds < 60 -> "${intervalSeconds}초"
-            else -> {
-                val minutes = intervalSeconds / 60
-                val seconds = intervalSeconds % 60
-                if (seconds == 0L) "${minutes}분" else "${minutes}분 ${seconds}초"
-            }
-        }
-    }
-
-    private val recheckPhrases = listOf(
-        "{interval} 만에 다시 켰어요. 지금 필요한 건 정보일까요, 안심일까요?",
-        "방금 확인했는데 다시 켰네요. 혹시 마음이 조금 불안했나요?",
-        "조금 전에도 확인했어요. 지금은 잠깐 쉬어도 괜찮아요.",
-        "새 알림이 없어도 확인하고 싶을 때가 있죠. 그 마음을 알아차려봐요.",
-        "지금 필요한 건 새 정보보다 다시 집중하는 힘일지도 몰라요."
-    )
 }
