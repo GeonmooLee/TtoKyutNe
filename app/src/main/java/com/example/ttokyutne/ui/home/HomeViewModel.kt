@@ -40,7 +40,7 @@ class HomeViewModel(
         }
     }
 
-    private fun refreshTodayStats() {
+    fun refreshTodayStats() {
         viewModelScope.launch {
             loadTodayStats()
         }

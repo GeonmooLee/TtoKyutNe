@@ -9,6 +9,10 @@ class ScreenOnEventRepository(
     private val screenOnEventDao: ScreenOnEventDao
 ) {
     suspend fun recordTestEvent(nowMillis: Long = System.currentTimeMillis()): RecordedScreenOnEvent {
+        return recordScreenOnEvent(nowMillis)
+    }
+
+    suspend fun recordScreenOnEvent(nowMillis: Long = System.currentTimeMillis()): RecordedScreenOnEvent {
         val previousEvent = screenOnEventDao.getLastEvent()
         val previousScreenOnTime = previousEvent?.screenOnTime
         val intervalSeconds = previousScreenOnTime?.let { previous ->

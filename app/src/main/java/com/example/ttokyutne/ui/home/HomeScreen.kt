@@ -52,6 +52,7 @@ private val WarmInk = Color(0xFFB45731)
 fun HomeScreen(
     uiState: HomeUiState = HomeUiState(),
     onRecordTestEvent: () -> Unit = {},
+    onStartScreenMonitor: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Scaffold(
@@ -74,6 +75,7 @@ fun HomeScreen(
             )
             ReassurancePanel()
             ActionButtons()
+            ScreenMonitorButton(onStartScreenMonitor = onStartScreenMonitor)
             DeveloperTestButton(
                 isSaving = uiState.isSavingTestEvent,
                 onRecordTestEvent = onRecordTestEvent
@@ -218,7 +220,7 @@ private fun TodayMetrics(
         MetricTile(
             title = "오늘 화면 켠 횟수",
             value = formatCountText(todayScreenOnCount),
-            caption = if (todayScreenOnCount == 0) "첫 확인 대기" else "테스트 이벤트 반영됨",
+            caption = if (todayScreenOnCount == 0) "첫 확인 대기" else "오늘 기록 반영됨",
             containerColor = Color.White,
             accentColor = Forest,
             modifier = Modifier.weight(1f)
@@ -358,6 +360,25 @@ private fun ActionButtons() {
         ) {
             Text(text = "설정", fontWeight = FontWeight.Bold)
         }
+    }
+}
+
+@Composable
+private fun ScreenMonitorButton(
+    onStartScreenMonitor: () -> Unit
+) {
+    Button(
+        onClick = onStartScreenMonitor,
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(52.dp),
+        shape = RoundedCornerShape(8.dp),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = ForestDark,
+            contentColor = Color.White
+        )
+    ) {
+        Text(text = "화면 감지 시작", fontWeight = FontWeight.Bold)
     }
 }
 
