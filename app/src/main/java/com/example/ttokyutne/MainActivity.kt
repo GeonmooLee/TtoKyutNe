@@ -19,6 +19,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -52,7 +53,6 @@ class MainActivity : ComponentActivity() {
     private lateinit var homeViewModel: HomeViewModel
     private lateinit var notificationPermissionLauncher: ActivityResultLauncher<String>
     private var notificationPermissionGranted by mutableStateOf(true)
-    private var pendingStartAfterNotificationPermission = false
     private var currentScreen by mutableStateOf(AppScreen.Home)
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -62,10 +62,6 @@ class MainActivity : ComponentActivity() {
         ) { isGranted ->
             notificationPermissionGranted = isNotificationPermissionGranted()
             Log.d(LOG_TAG, "POST_NOTIFICATIONS permission granted=$isGranted")
-            if (isGranted && pendingStartAfterNotificationPermission) {
-                doStartScreenMonitorService()
-            }
-            pendingStartAfterNotificationPermission = false
         }
         notificationPermissionGranted = isNotificationPermissionGranted()
 
@@ -78,6 +74,20 @@ class MainActivity : ComponentActivity() {
         setContent {
             TtoKyutNeTheme {
                 val uiState by homeViewModel.uiState.collectAsState()
+
+                LaunchedEffect(
+                    uiState.isSettingsLoaded,
+                    uiState.settings.onboardingCompleted,
+                    notificationPermissionGranted
+                ) {
+                    if (
+                        uiState.isSettingsLoaded &&
+                        uiState.settings.onboardingCompleted &&
+                        notificationPermissionGranted
+                    ) {
+                        doStartScreenMonitorService()
+                    }
+                }
 
                 when {
                     !uiState.isSettingsLoaded -> {
@@ -102,8 +112,6 @@ class MainActivity : ComponentActivity() {
                                     onOpenTodayAnalysis = ::openTodayAnalysis,
                                     onOpenWeeklyAnalysis = ::openWeeklyAnalysis,
                                     onOpenSettings = ::openSettings,
-                                    onRecordTestEvent = homeViewModel::recordTestEvent,
-                                    onStartScreenMonitor = ::startScreenMonitorService,
                                     onRequestNotificationPermission = ::requestNotificationPermission
                                 )
                             }
@@ -148,17 +156,6 @@ class MainActivity : ComponentActivity() {
             homeViewModel.refreshTodayStats()
             homeViewModel.refreshWeeklyStats()
         }
-    }
-
-    private fun startScreenMonitorService() {
-        if (!isNotificationPermissionGranted()) {
-            pendingStartAfterNotificationPermission = true
-            requestNotificationPermission()
-            Log.d(LOG_TAG, "ScreenMonitorService start delayed: notification permission missing")
-            return
-        }
-
-        doStartScreenMonitorService()
     }
 
     private fun doStartScreenMonitorService() {

@@ -36,22 +36,6 @@ class HomeViewModel(
         refreshSettings()
     }
 
-    fun recordTestEvent() {
-        viewModelScope.launch {
-            _uiState.update { it.copy(isSavingTestEvent = true) }
-
-            val recordedEvent = screenOnEventRepository.recordTestEvent()
-            loadTodayStats()
-            loadWeeklyStats()
-
-            _uiState.update { it.copy(isSavingTestEvent = false) }
-            Log.d(
-                LOG_TAG,
-                "Inserted test screen_on_event id=${recordedEvent.id}, intervalSeconds=${recordedEvent.intervalSeconds}"
-            )
-        }
-    }
-
     fun refreshTodayStats() {
         viewModelScope.launch {
             loadTodayStats()

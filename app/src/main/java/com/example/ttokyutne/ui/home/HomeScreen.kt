@@ -55,8 +55,6 @@ fun HomeScreen(
     onOpenTodayAnalysis: () -> Unit = {},
     onOpenWeeklyAnalysis: () -> Unit = {},
     onOpenSettings: () -> Unit = {},
-    onRecordTestEvent: () -> Unit = {},
-    onStartScreenMonitor: () -> Unit = {},
     onRequestNotificationPermission: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
@@ -88,11 +86,6 @@ fun HomeScreen(
                 onOpenTodayAnalysis = onOpenTodayAnalysis,
                 onOpenWeeklyAnalysis = onOpenWeeklyAnalysis,
                 onOpenSettings = onOpenSettings
-            )
-            ScreenMonitorButton(onStartScreenMonitor = onStartScreenMonitor)
-            DeveloperTestButton(
-                isSaving = uiState.isSavingTestEvent,
-                onRecordTestEvent = onRecordTestEvent
             )
             Spacer(modifier = Modifier.height(4.dp))
         }
@@ -433,51 +426,6 @@ private fun ActionButtons(
         ) {
             Text(text = "주간 분석", fontWeight = FontWeight.Bold)
         }
-    }
-}
-
-@Composable
-private fun ScreenMonitorButton(
-    onStartScreenMonitor: () -> Unit
-) {
-    Button(
-        onClick = onStartScreenMonitor,
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(52.dp),
-        shape = RoundedCornerShape(8.dp),
-        colors = ButtonDefaults.buttonColors(
-            containerColor = ForestDark,
-            contentColor = Color.White
-        )
-    ) {
-        Text(text = "화면 감지 시작", fontWeight = FontWeight.Bold)
-    }
-}
-
-@Composable
-private fun DeveloperTestButton(
-    isSaving: Boolean,
-    onRecordTestEvent: () -> Unit
-) {
-    Button(
-        onClick = onRecordTestEvent,
-        enabled = !isSaving,
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(52.dp),
-        shape = RoundedCornerShape(8.dp),
-        colors = ButtonDefaults.buttonColors(
-            containerColor = Ink,
-            contentColor = Color.White,
-            disabledContainerColor = Color(0xFF98A2B3),
-            disabledContentColor = Color.White
-        )
-    ) {
-        Text(
-            text = if (isSaving) "저장 중" else "개발용 테스트 이벤트 기록",
-            fontWeight = FontWeight.Bold
-        )
     }
 }
 
