@@ -72,7 +72,7 @@ fun HomeScreen(
         ) {
             AppHeader()
             HeroSection(lastIntervalSeconds = uiState.lastIntervalSeconds)
-            if (!notificationPermissionGranted) {
+            if (uiState.settings.monitoringEnabled && !notificationPermissionGranted) {
                 NotificationPermissionNotice(
                     onRequestNotificationPermission = onRequestNotificationPermission
                 )

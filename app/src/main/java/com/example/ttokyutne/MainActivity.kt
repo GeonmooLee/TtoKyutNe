@@ -78,14 +78,19 @@ class MainActivity : ComponentActivity() {
                 LaunchedEffect(
                     uiState.isSettingsLoaded,
                     uiState.settings.onboardingCompleted,
+                    uiState.settings.monitoringEnabled,
                     notificationPermissionGranted
                 ) {
-                    if (
-                        uiState.isSettingsLoaded &&
-                        uiState.settings.onboardingCompleted &&
-                        notificationPermissionGranted
-                    ) {
-                        doStartScreenMonitorService()
+                    if (uiState.isSettingsLoaded) {
+                        if (
+                            uiState.settings.onboardingCompleted &&
+                            uiState.settings.monitoringEnabled &&
+                            notificationPermissionGranted
+                        ) {
+                            doStartScreenMonitorService()
+                        } else {
+                            doStopScreenMonitorService()
+                        }
                     }
                 }
 
@@ -99,7 +104,7 @@ class MainActivity : ComponentActivity() {
                             notificationPermissionGranted = notificationPermissionGranted,
                             onRequestNotificationPermission = ::requestNotificationPermission,
                             onComplete = ::completeOnboarding,
-                            onSkip = ::completeOnboarding
+                            onSkip = { completeOnboarding(monitoringEnabled = false) }
                         )
                     }
 
@@ -135,6 +140,7 @@ class MainActivity : ComponentActivity() {
                                     settings = uiState.settings,
                                     notificationPermissionGranted = notificationPermissionGranted,
                                     onBack = { currentScreen = AppScreen.Home },
+                                    onMonitoringEnabledChange = homeViewModel::updateMonitoringEnabled,
                                     onRecheckAlertModeChange = homeViewModel::updateRecheckAlertMode,
                                     onMinIntervalSecondsChange = homeViewModel::updateMinIntervalSeconds,
                                     onDeleteAllData = homeViewModel::deleteAllAppData,
@@ -164,6 +170,12 @@ class MainActivity : ComponentActivity() {
         Log.d(LOG_TAG, "Requested ScreenMonitorService start")
     }
 
+    private fun doStopScreenMonitorService() {
+        val intent = Intent(this, ScreenMonitorService::class.java)
+        stopService(intent)
+        Log.d(LOG_TAG, "Requested ScreenMonitorService stop")
+    }
+
     private fun openTodayAnalysis() {
         homeViewModel.refreshTodayStats()
         currentScreen = AppScreen.TodayAnalysis
@@ -179,8 +191,8 @@ class MainActivity : ComponentActivity() {
         currentScreen = AppScreen.Settings
     }
 
-    private fun completeOnboarding() {
-        homeViewModel.completeOnboarding()
+    private fun completeOnboarding(monitoringEnabled: Boolean) {
+        homeViewModel.completeOnboarding(monitoringEnabled)
         currentScreen = AppScreen.Home
     }
 

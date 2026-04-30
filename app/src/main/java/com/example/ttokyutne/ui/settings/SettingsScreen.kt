@@ -21,6 +21,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -59,6 +60,7 @@ fun SettingsScreen(
     settings: SettingsUiState,
     notificationPermissionGranted: Boolean,
     onBack: () -> Unit,
+    onMonitoringEnabledChange: (Boolean) -> Unit,
     onRecheckAlertModeChange: (RecheckAlertMode) -> Unit,
     onMinIntervalSecondsChange: (Long) -> Unit,
     onDeleteAllData: () -> Unit,
@@ -85,6 +87,12 @@ fun SettingsScreen(
             Header(onBack = onBack)
 
             AppExplanationCard()
+
+            MonitoringCard(
+                monitoringEnabled = settings.monitoringEnabled,
+                notificationPermissionGranted = notificationPermissionGranted,
+                onMonitoringEnabledChange = onMonitoringEnabledChange
+            )
 
             RecheckAlertModeCard(
                 selectedMode = settings.recheckAlertMode,
@@ -273,6 +281,60 @@ private fun NotificationPermissionCard(
 }
 
 @Composable
+private fun MonitoringCard(
+    monitoringEnabled: Boolean,
+    notificationPermissionGranted: Boolean,
+    onMonitoringEnabledChange: (Boolean) -> Unit
+) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(8.dp),
+        color = Color.White,
+        border = BorderStroke(1.dp, Line)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(18.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(5.dp)
+            ) {
+                Text(
+                    text = "화면 켜짐 측정",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = Ink
+                )
+                Text(
+                    text = if (monitoringEnabled) {
+                        "켜져 있어요. 화면을 다시 켤 때마다 간격을 기록합니다."
+                    } else {
+                        "꺼져 있어요. 화면 켜짐 기록을 새로 저장하지 않습니다."
+                    },
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Muted
+                )
+                if (monitoringEnabled && !notificationPermissionGranted) {
+                    Text(
+                        text = "Android 알림 권한이 꺼져 있으면 백그라운드 측정을 시작할 수 없어요.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = WarmInk
+                    )
+                }
+            }
+            Switch(
+                checked = monitoringEnabled,
+                onCheckedChange = onMonitoringEnabledChange
+            )
+        }
+    }
+}
+
+@Composable
 private fun RecheckAlertModeCard(
     selectedMode: RecheckAlertMode,
     onModeChange: (RecheckAlertMode) -> Unit
@@ -295,7 +357,7 @@ private fun RecheckAlertModeCard(
                     color = Ink
                 )
                 Text(
-                    text = "화면 켜짐 기록은 어떤 모드에서도 계속 저장됩니다.",
+                    text = "화면 켜짐 측정이 켜져 있을 때, 재확인 알림을 어떻게 받을지 정해요.",
                     style = MaterialTheme.typography.bodyMedium,
                     color = Muted
                 )
@@ -538,6 +600,7 @@ private fun SettingsScreenPreview() {
             settings = SettingsUiState(),
             notificationPermissionGranted = false,
             onBack = {},
+            onMonitoringEnabledChange = {},
             onRecheckAlertModeChange = {},
             onMinIntervalSecondsChange = {},
             onDeleteAllData = {},

@@ -16,6 +16,8 @@ data class UserSettingsEntity(
     val recheckAlertMode: String = "WITH_PHRASE",
     @ColumnInfo(defaultValue = "0")
     val onboardingCompleted: Boolean = false,
+    @ColumnInfo(defaultValue = "0")
+    val monitoringEnabled: Boolean = false,
     val quietHoursEnabled: Boolean = false,
     val dataRetentionDays: Int = 365,
     val updatedAt: Long

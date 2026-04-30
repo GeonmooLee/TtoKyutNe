@@ -86,11 +86,22 @@ class HomeViewModel(
         }
     }
 
-    fun completeOnboarding() {
+    fun updateMonitoringEnabled(enabled: Boolean) {
         viewModelScope.launch {
-            val settings = settingsRepository.updateOnboardingCompleted(true)
+            val settings = settingsRepository.updateMonitoringEnabled(enabled)
             _uiState.update { it.copy(settings = settings.toUiState(), isSettingsLoaded = true) }
-            Log.d(LOG_TAG, "Updated onboardingCompleted=true")
+            Log.d(LOG_TAG, "Updated monitoringEnabled=$enabled")
+        }
+    }
+
+    fun completeOnboarding(monitoringEnabled: Boolean) {
+        viewModelScope.launch {
+            val settings = settingsRepository.completeOnboarding(monitoringEnabled)
+            _uiState.update { it.copy(settings = settings.toUiState(), isSettingsLoaded = true) }
+            Log.d(
+                LOG_TAG,
+                "Updated onboardingCompleted=true, monitoringEnabled=$monitoringEnabled"
+            )
         }
     }
 
@@ -229,6 +240,7 @@ class HomeViewModel(
             vibrationEnabled = vibrationEnabled,
             recheckAlertMode = RecheckAlertMode.fromStorageValue(recheckAlertMode),
             onboardingCompleted = onboardingCompleted,
+            monitoringEnabled = monitoringEnabled,
             quietHoursEnabled = quietHoursEnabled,
             dataRetentionDays = dataRetentionDays
         )

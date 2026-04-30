@@ -23,6 +23,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -101,11 +102,12 @@ private val onboardingPages = listOf(
 fun OnboardingScreen(
     notificationPermissionGranted: Boolean,
     onRequestNotificationPermission: () -> Unit,
-    onComplete: () -> Unit,
+    onComplete: (Boolean) -> Unit,
     onSkip: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     var pageIndex by remember { mutableStateOf(0) }
+    var monitoringEnabled by remember { mutableStateOf(false) }
     val currentPage = onboardingPages[pageIndex]
     val isLastPage = pageIndex == onboardingPages.lastIndex
 
@@ -131,7 +133,9 @@ fun OnboardingScreen(
                 pageIndex = pageIndex,
                 pageCount = onboardingPages.size,
                 notificationPermissionGranted = notificationPermissionGranted,
-                isLastPage = isLastPage
+                isLastPage = isLastPage,
+                monitoringEnabled = monitoringEnabled,
+                onMonitoringEnabledChange = { monitoringEnabled = it }
             )
             PageIndicators(
                 pageIndex = pageIndex,
@@ -140,14 +144,15 @@ fun OnboardingScreen(
             ActionButtons(
                 isFirstPage = pageIndex == 0,
                 isLastPage = isLastPage,
+                monitoringEnabled = monitoringEnabled,
                 notificationPermissionGranted = notificationPermissionGranted,
                 onPrevious = { pageIndex -= 1 },
                 onNext = { pageIndex += 1 },
                 onStart = {
-                    if (!notificationPermissionGranted) {
+                    if (monitoringEnabled && !notificationPermissionGranted) {
                         onRequestNotificationPermission()
                     }
-                    onComplete()
+                    onComplete(monitoringEnabled)
                 }
             )
             Spacer(modifier = Modifier.height(4.dp))
@@ -191,7 +196,9 @@ private fun OnboardingCard(
     pageIndex: Int,
     pageCount: Int,
     notificationPermissionGranted: Boolean,
-    isLastPage: Boolean
+    isLastPage: Boolean,
+    monitoringEnabled: Boolean,
+    onMonitoringEnabledChange: (Boolean) -> Unit
 ) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
@@ -232,8 +239,58 @@ private fun OnboardingCard(
             }
 
             if (isLastPage) {
+                MonitoringStartCard(
+                    monitoringEnabled = monitoringEnabled,
+                    onMonitoringEnabledChange = onMonitoringEnabledChange
+                )
                 PermissionNotice(notificationPermissionGranted = notificationPermissionGranted)
             }
+        }
+    }
+}
+
+@Composable
+private fun MonitoringStartCard(
+    monitoringEnabled: Boolean,
+    onMonitoringEnabledChange: (Boolean) -> Unit
+) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(8.dp),
+        color = Color.White,
+        border = BorderStroke(1.dp, Line)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(5.dp)
+            ) {
+                Text(
+                    text = "화면 켜짐 측정 시작",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = Ink
+                )
+                Text(
+                    text = if (monitoringEnabled) {
+                        "켜져 있어요. 시작 후 화면 켜짐 간격을 기록합니다."
+                    } else {
+                        "원할 때 켜세요. 꺼두면 기록을 새로 저장하지 않습니다."
+                    },
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Muted
+                )
+            }
+            Switch(
+                checked = monitoringEnabled,
+                onCheckedChange = onMonitoringEnabledChange
+            )
         }
     }
 }
@@ -295,6 +352,7 @@ private fun PageIndicators(
 private fun ActionButtons(
     isFirstPage: Boolean,
     isLastPage: Boolean,
+    monitoringEnabled: Boolean,
     notificationPermissionGranted: Boolean,
     onPrevious: () -> Unit,
     onNext: () -> Unit,
@@ -315,6 +373,7 @@ private fun ActionButtons(
             Text(
                 text = when {
                     !isLastPage -> "다음"
+                    !monitoringEnabled -> "측정 없이 시작하기"
                     notificationPermissionGranted -> "시작하기"
                     else -> "알림 권한 허용하고 시작"
                 },
