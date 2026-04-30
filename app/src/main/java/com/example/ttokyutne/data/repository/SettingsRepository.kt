@@ -63,6 +63,16 @@ class SettingsRepository(
         return updated
     }
 
+    suspend fun updateOnboardingCompleted(completed: Boolean): UserSettingsEntity {
+        val current = getSettings()
+        val updated = current.copy(
+            onboardingCompleted = completed,
+            updatedAt = System.currentTimeMillis()
+        )
+        userSettingsDao.upsertSettings(updated)
+        return updated
+    }
+
     suspend fun deleteAllAppData() {
         screenOnEventDao.deleteAllEvents()
         phraseHistoryDao.deleteAllPhraseHistory()

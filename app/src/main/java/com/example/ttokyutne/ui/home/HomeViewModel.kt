@@ -73,7 +73,7 @@ class HomeViewModel(
     fun updateNotificationEnabled(enabled: Boolean) {
         viewModelScope.launch {
             val settings = settingsRepository.updateNotificationEnabled(enabled)
-            _uiState.update { it.copy(settings = settings.toUiState()) }
+            _uiState.update { it.copy(settings = settings.toUiState(), isSettingsLoaded = true) }
             Log.d(LOG_TAG, "Updated notificationEnabled=$enabled")
         }
     }
@@ -81,7 +81,7 @@ class HomeViewModel(
     fun updateRecheckAlertMode(mode: RecheckAlertMode) {
         viewModelScope.launch {
             val settings = settingsRepository.updateRecheckAlertMode(mode)
-            _uiState.update { it.copy(settings = settings.toUiState()) }
+            _uiState.update { it.copy(settings = settings.toUiState(), isSettingsLoaded = true) }
             Log.d(LOG_TAG, "Updated recheckAlertMode=${mode.storageValue}")
         }
     }
@@ -89,7 +89,7 @@ class HomeViewModel(
     fun updateMinIntervalSeconds(seconds: Long) {
         viewModelScope.launch {
             val settings = settingsRepository.updateMinIntervalSeconds(seconds)
-            _uiState.update { it.copy(settings = settings.toUiState()) }
+            _uiState.update { it.copy(settings = settings.toUiState(), isSettingsLoaded = true) }
             Log.d(LOG_TAG, "Updated minIntervalSeconds=$seconds")
         }
     }
@@ -97,8 +97,16 @@ class HomeViewModel(
     fun updateVibrationEnabled(enabled: Boolean) {
         viewModelScope.launch {
             val settings = settingsRepository.updateVibrationEnabled(enabled)
-            _uiState.update { it.copy(settings = settings.toUiState()) }
+            _uiState.update { it.copy(settings = settings.toUiState(), isSettingsLoaded = true) }
             Log.d(LOG_TAG, "Updated vibrationEnabled=$enabled")
+        }
+    }
+
+    fun completeOnboarding() {
+        viewModelScope.launch {
+            val settings = settingsRepository.updateOnboardingCompleted(true)
+            _uiState.update { it.copy(settings = settings.toUiState(), isSettingsLoaded = true) }
+            Log.d(LOG_TAG, "Updated onboardingCompleted=true")
         }
     }
 
@@ -223,7 +231,7 @@ class HomeViewModel(
 
     private suspend fun loadSettings() {
         val settings = settingsRepository.getSettings()
-        _uiState.update { it.copy(settings = settings.toUiState()) }
+        _uiState.update { it.copy(settings = settings.toUiState(), isSettingsLoaded = true) }
         Log.d(
             LOG_TAG,
             "Loaded settings notificationEnabled=${settings.notificationEnabled}, minIntervalSeconds=${settings.minIntervalSeconds}, vibrationEnabled=${settings.vibrationEnabled}, recheckAlertMode=${settings.recheckAlertMode}"
@@ -236,6 +244,7 @@ class HomeViewModel(
             minIntervalSeconds = minIntervalSeconds,
             vibrationEnabled = vibrationEnabled,
             recheckAlertMode = RecheckAlertMode.fromStorageValue(recheckAlertMode),
+            onboardingCompleted = onboardingCompleted,
             quietHoursEnabled = quietHoursEnabled,
             dataRetentionDays = dataRetentionDays
         )

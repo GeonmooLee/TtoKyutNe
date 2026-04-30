@@ -14,6 +14,8 @@ data class UserSettingsEntity(
     val vibrationEnabled: Boolean = true,
     @ColumnInfo(defaultValue = "'WITH_PHRASE'")
     val recheckAlertMode: String = "WITH_PHRASE",
+    @ColumnInfo(defaultValue = "0")
+    val onboardingCompleted: Boolean = false,
     val quietHoursEnabled: Boolean = false,
     val dataRetentionDays: Int = 365,
     val updatedAt: Long

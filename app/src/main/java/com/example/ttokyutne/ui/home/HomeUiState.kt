@@ -8,6 +8,7 @@ data class HomeUiState(
     val todayScreenOnCount: Int = 0,
     val lastIntervalSeconds: Long? = null,
     val isSavingTestEvent: Boolean = false,
+    val isSettingsLoaded: Boolean = false,
     val todayAnalysis: TodayAnalysisUiState = TodayAnalysisUiState(),
     val weeklyAnalysis: WeeklyAnalysisUiState = WeeklyAnalysisUiState(),
     val settings: SettingsUiState = SettingsUiState()

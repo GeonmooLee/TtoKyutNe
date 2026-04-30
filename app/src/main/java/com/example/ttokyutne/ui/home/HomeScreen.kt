@@ -164,7 +164,7 @@ private fun AppHeader() {
             border = BorderStroke(1.dp, Color(0xFFC8E5DC))
         ) {
             Text(
-                text = "v0.1",
+                text = "v0.2",
                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 7.dp),
                 style = MaterialTheme.typography.labelMedium,
                 fontWeight = FontWeight.Bold,
