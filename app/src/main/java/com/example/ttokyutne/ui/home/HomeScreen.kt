@@ -53,6 +53,7 @@ fun HomeScreen(
     uiState: HomeUiState = HomeUiState(),
     notificationPermissionGranted: Boolean = true,
     onOpenTodayAnalysis: () -> Unit = {},
+    onOpenWeeklyAnalysis: () -> Unit = {},
     onOpenSettings: () -> Unit = {},
     onRecordTestEvent: () -> Unit = {},
     onStartScreenMonitor: () -> Unit = {},
@@ -85,6 +86,7 @@ fun HomeScreen(
             ReassurancePanel()
             ActionButtons(
                 onOpenTodayAnalysis = onOpenTodayAnalysis,
+                onOpenWeeklyAnalysis = onOpenWeeklyAnalysis,
                 onOpenSettings = onOpenSettings
             )
             ScreenMonitorButton(onStartScreenMonitor = onStartScreenMonitor)
@@ -380,39 +382,56 @@ private fun ReassurancePanel() {
 @Composable
 private fun ActionButtons(
     onOpenTodayAnalysis: () -> Unit,
+    onOpenWeeklyAnalysis: () -> Unit,
     onOpenSettings: () -> Unit
 ) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(10.dp)
-    ) {
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            Button(
+                onClick = onOpenTodayAnalysis,
+                modifier = Modifier
+                    .weight(1f)
+                    .height(52.dp),
+                shape = RoundedCornerShape(8.dp),
+                contentPadding = PaddingValues(horizontal = 12.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Forest,
+                    contentColor = Color.White
+                )
+            ) {
+                Text(text = "오늘 분석", fontWeight = FontWeight.Bold)
+            }
+            OutlinedButton(
+                onClick = onOpenSettings,
+                modifier = Modifier
+                    .weight(1f)
+                    .height(52.dp),
+                shape = RoundedCornerShape(8.dp),
+                contentPadding = PaddingValues(horizontal = 12.dp),
+                border = BorderStroke(1.dp, Color(0xFFB8C9C4)),
+                colors = ButtonDefaults.outlinedButtonColors(
+                    contentColor = Forest
+                )
+            ) {
+                Text(text = "설정", fontWeight = FontWeight.Bold)
+            }
+        }
         Button(
-            onClick = onOpenTodayAnalysis,
+            onClick = onOpenWeeklyAnalysis,
             modifier = Modifier
-                .weight(1f)
+                .fillMaxWidth()
                 .height(52.dp),
             shape = RoundedCornerShape(8.dp),
             contentPadding = PaddingValues(horizontal = 12.dp),
             colors = ButtonDefaults.buttonColors(
-                containerColor = Forest,
+                containerColor = BlueInk,
                 contentColor = Color.White
             )
         ) {
-            Text(text = "오늘 분석", fontWeight = FontWeight.Bold)
-        }
-        OutlinedButton(
-            onClick = onOpenSettings,
-            modifier = Modifier
-                .weight(1f)
-                .height(52.dp),
-            shape = RoundedCornerShape(8.dp),
-            contentPadding = PaddingValues(horizontal = 12.dp),
-            border = BorderStroke(1.dp, Color(0xFFB8C9C4)),
-            colors = ButtonDefaults.outlinedButtonColors(
-                contentColor = Forest
-            )
-        ) {
-            Text(text = "설정", fontWeight = FontWeight.Bold)
+            Text(text = "주간 분석", fontWeight = FontWeight.Bold)
         }
     }
 }

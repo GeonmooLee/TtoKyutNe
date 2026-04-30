@@ -23,6 +23,7 @@ import com.example.ttokyutne.monitor.ScreenMonitorService
 import com.example.ttokyutne.notification.NotificationHelper
 import com.example.ttokyutne.notification.RECHECK_ALERT_CHANNEL_ID
 import com.example.ttokyutne.ui.analysis.TodayAnalysisScreen
+import com.example.ttokyutne.ui.analysis.WeeklyAnalysisScreen
 import com.example.ttokyutne.ui.home.HomeScreen
 import com.example.ttokyutne.ui.home.HomeViewModel
 import com.example.ttokyutne.ui.settings.SettingsScreen
@@ -33,6 +34,7 @@ private const val LOG_TAG = "Ttokyeonne"
 private enum class AppScreen {
     Home,
     TodayAnalysis,
+    WeeklyAnalysis,
     Settings
 }
 
@@ -73,6 +75,7 @@ class MainActivity : ComponentActivity() {
                             uiState = uiState,
                             notificationPermissionGranted = notificationPermissionGranted,
                             onOpenTodayAnalysis = ::openTodayAnalysis,
+                            onOpenWeeklyAnalysis = ::openWeeklyAnalysis,
                             onOpenSettings = ::openSettings,
                             onRecordTestEvent = homeViewModel::recordTestEvent,
                             onStartScreenMonitor = ::startScreenMonitorService,
@@ -83,6 +86,13 @@ class MainActivity : ComponentActivity() {
                     AppScreen.TodayAnalysis -> {
                         TodayAnalysisScreen(
                             analysis = uiState.todayAnalysis,
+                            onBack = { currentScreen = AppScreen.Home }
+                        )
+                    }
+
+                    AppScreen.WeeklyAnalysis -> {
+                        WeeklyAnalysisScreen(
+                            analysis = uiState.weeklyAnalysis,
                             onBack = { currentScreen = AppScreen.Home }
                         )
                     }
@@ -133,6 +143,11 @@ class MainActivity : ComponentActivity() {
     private fun openTodayAnalysis() {
         homeViewModel.refreshTodayStats()
         currentScreen = AppScreen.TodayAnalysis
+    }
+
+    private fun openWeeklyAnalysis() {
+        homeViewModel.refreshWeeklyStats()
+        currentScreen = AppScreen.WeeklyAnalysis
     }
 
     private fun openSettings() {
