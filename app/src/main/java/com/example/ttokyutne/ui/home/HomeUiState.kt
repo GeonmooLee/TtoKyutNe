@@ -40,11 +40,17 @@ data class WeeklyAnalysisUiState(
 data class DailyScreenOnCountUiState(
     val date: LocalDate,
     val dayOfWeek: DayOfWeek,
-    val count: Int
+    val count: Int,
+    val hourlyCounts: List<HourlyScreenOnCountUiState> = emptyList()
 )
 
 data class DayOfWeekScreenOnPatternUiState(
     val dayOfWeek: DayOfWeek,
+    val count: Int
+)
+
+data class HourlyScreenOnCountUiState(
+    val hour: Int,
     val count: Int
 )
 

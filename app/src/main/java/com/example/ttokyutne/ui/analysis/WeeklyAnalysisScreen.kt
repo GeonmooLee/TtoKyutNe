@@ -3,16 +3,17 @@ package com.example.ttokyutne.ui.analysis
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -25,6 +26,10 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -35,6 +40,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.ttokyutne.ui.home.BusiestHourUiState
 import com.example.ttokyutne.ui.home.DailyScreenOnCountUiState
+import com.example.ttokyutne.ui.home.HourlyScreenOnCountUiState
 import com.example.ttokyutne.ui.home.WeeklyAnalysisUiState
 import com.example.ttokyutne.ui.theme.TtoKyutNeTheme
 import java.time.DayOfWeek
@@ -58,6 +64,14 @@ fun WeeklyAnalysisScreen(
     modifier: Modifier = Modifier
 ) {
     BackHandler(onBack = onBack)
+    val defaultSelectedDate = analysis.dailyScreenOnCounts.lastOrNull { it.count > 0 }?.date
+        ?: analysis.dailyScreenOnCounts.lastOrNull()?.date
+    var selectedDate by remember(analysis.dailyScreenOnCounts) {
+        mutableStateOf<LocalDate?>(defaultSelectedDate)
+    }
+    val selectedDailyCount = analysis.dailyScreenOnCounts.firstOrNull { dailyCount ->
+        dailyCount.date == selectedDate
+    } ?: analysis.dailyScreenOnCounts.lastOrNull()
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
@@ -73,7 +87,12 @@ fun WeeklyAnalysisScreen(
         ) {
             Header(onBack = onBack)
             SummaryCards(analysis = analysis)
-            DayPatternCard(analysis = analysis)
+            DayPatternCard(
+                analysis = analysis,
+                selectedDate = selectedDailyCount?.date,
+                onSelectDate = { selectedDate = it }
+            )
+            HourlyPatternCard(dailyCount = selectedDailyCount)
             TimePatternCard(busiestHour = analysis.busiestHour)
             InterpretationCard()
             Spacer(modifier = Modifier.height(4.dp))
@@ -193,7 +212,11 @@ private fun StatCard(
 }
 
 @Composable
-private fun DayPatternCard(analysis: WeeklyAnalysisUiState) {
+private fun DayPatternCard(
+    analysis: WeeklyAnalysisUiState,
+    selectedDate: LocalDate?,
+    onSelectDate: (LocalDate) -> Unit
+) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(8.dp),
@@ -218,56 +241,169 @@ private fun DayPatternCard(analysis: WeeklyAnalysisUiState) {
                     color = Muted
                 )
             } else {
-                WeeklyBarChart(dailyCounts = analysis.dailyScreenOnCounts)
+                WeeklyHistogram(
+                    dailyCounts = analysis.dailyScreenOnCounts,
+                    selectedDate = selectedDate,
+                    onSelectDate = onSelectDate
+                )
             }
         }
     }
 }
 
 @Composable
-private fun WeeklyBarChart(dailyCounts: List<DailyScreenOnCountUiState>) {
+private fun WeeklyHistogram(
+    dailyCounts: List<DailyScreenOnCountUiState>,
+    selectedDate: LocalDate?,
+    onSelectDate: (LocalDate) -> Unit
+) {
     val maxCount = dailyCounts.maxOfOrNull { it.count }?.coerceAtLeast(1) ?: 1
 
-    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(176.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.Bottom
+    ) {
         dailyCounts.forEach { dailyCount ->
+            val selected = dailyCount.date == selectedDate
             val fraction = dailyCount.count.toFloat() / maxCount.toFloat()
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-                verticalAlignment = Alignment.CenterVertically
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight()
+                    .clip(RoundedCornerShape(8.dp))
+                    .clickable { onSelectDate(dailyCount.date) }
+                    .padding(horizontal = 2.dp, vertical = 4.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(6.dp)
             ) {
-                Text(
-                    text = formatDateLabel(dailyCount),
-                    modifier = Modifier.width(64.dp),
-                    style = MaterialTheme.typography.bodySmall,
-                    fontWeight = FontWeight.SemiBold,
-                    color = Ink
-                )
                 Box(
                     modifier = Modifier
                         .weight(1f)
-                        .height(14.dp)
-                        .clip(RoundedCornerShape(100.dp))
-                        .background(Color(0xFFE9EEF2))
+                        .fillMaxWidth(),
+                    contentAlignment = Alignment.BottomCenter
                 ) {
                     if (dailyCount.count > 0) {
                         Box(
                             modifier = Modifier
-                                .fillMaxWidth(fraction)
-                                .height(14.dp)
+                                .fillMaxWidth()
+                                .fillMaxHeight(fraction)
                                 .clip(RoundedCornerShape(100.dp))
-                                .background(Forest)
+                                .background(if (selected) BlueInk else Color(0xFF98A2B3))
                         )
                     }
                 }
                 Text(
-                    text = "${dailyCount.count}회",
-                    modifier = Modifier.width(42.dp),
-                    style = MaterialTheme.typography.bodySmall,
+                    text = formatDayOfWeek(dailyCount.dayOfWeek),
+                    style = MaterialTheme.typography.labelMedium,
                     fontWeight = FontWeight.Bold,
-                    color = if (dailyCount.count > 0) Forest else Muted,
-                    textAlign = TextAlign.End
+                    color = if (selected) BlueInk else Muted,
+                    textAlign = TextAlign.Center
+                )
+                Text(
+                    text = "${dailyCount.date.monthValue}/${dailyCount.date.dayOfMonth}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Muted,
+                    textAlign = TextAlign.Center
+                )
+                Text(
+                    text = "${dailyCount.count}",
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = if (selected) BlueInk else Muted,
+                    textAlign = TextAlign.Center
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun HourlyPatternCard(dailyCount: DailyScreenOnCountUiState?) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(8.dp),
+        color = Color.White,
+        border = BorderStroke(1.dp, Line)
+    ) {
+        Column(
+            modifier = Modifier.padding(18.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp)
+        ) {
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(
+                    text = "선택한 날의 시간대",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = Ink
+                )
+                Text(
+                    text = dailyCount?.let(::formatDateLabel) ?: "최근 7일 기록 없음",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Muted
+                )
+            }
+
+            if (dailyCount == null || dailyCount.count == 0) {
+                Text(
+                    text = "선택한 날에는 아직 시간대 패턴을 볼 기록이 없어요.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Muted
+                )
+            } else {
+                HourlyHistogram(hourlyCounts = dailyCount.hourlyCounts)
+            }
+        }
+    }
+}
+
+@Composable
+private fun HourlyHistogram(hourlyCounts: List<HourlyScreenOnCountUiState>) {
+    val maxCount = hourlyCounts.maxOfOrNull { it.count }?.coerceAtLeast(1) ?: 1
+
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(132.dp),
+            horizontalArrangement = Arrangement.spacedBy(2.dp),
+            verticalAlignment = Alignment.Bottom
+        ) {
+            hourlyCounts.forEach { hourlyCount ->
+                val fraction = hourlyCount.count.toFloat() / maxCount.toFloat()
+                val isPeak = hourlyCount.count == maxCount && hourlyCount.count > 0
+
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight(),
+                    contentAlignment = Alignment.BottomCenter
+                ) {
+                    if (hourlyCount.count > 0) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .fillMaxHeight(fraction)
+                                .clip(RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp))
+                                .background(if (isPeak) BlueInk else Forest)
+                        )
+                    }
+                }
+            }
+        }
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            listOf("00", "06", "12", "18", "23").forEach { hourLabel ->
+                Text(
+                    text = hourLabel,
+                    style = MaterialTheme.typography.bodySmall,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Muted
                 )
             }
         }
@@ -371,10 +507,22 @@ private fun WeeklyAnalysisScreenPreview() {
     val today = LocalDate.now()
     val dailyCounts = (6 downTo 0).map { daysAgo ->
         val date = today.minusDays(daysAgo.toLong())
+        val count = listOf(4, 8, 3, 0, 11, 6, 9)[6 - daysAgo]
         DailyScreenOnCountUiState(
             date = date,
             dayOfWeek = date.dayOfWeek,
-            count = listOf(4, 8, 3, 0, 11, 6, 9)[6 - daysAgo]
+            count = count,
+            hourlyCounts = (0..23).map { hour ->
+                HourlyScreenOnCountUiState(
+                    hour = hour,
+                    count = when {
+                        count == 0 -> 0
+                        hour in 21..23 -> 2
+                        hour in 7..9 -> 1
+                        else -> 0
+                    }
+                )
+            }
         )
     }
 

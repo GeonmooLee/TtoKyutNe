@@ -158,11 +158,26 @@ class HomeViewModel(
                 Instant.ofEpochMilli(event.screenOnTime).atZone(zoneId).toLocalDate()
             }
             .eachCount()
+        val eventsByDateAndHour = weeklyEvents
+            .groupBy { event ->
+                Instant.ofEpochMilli(event.screenOnTime).atZone(zoneId).toLocalDate()
+            }
+            .mapValues { (_, events) ->
+                events.groupingBy { event ->
+                    Instant.ofEpochMilli(event.screenOnTime).atZone(zoneId).hour
+                }.eachCount()
+            }
         val dailyScreenOnCounts = weekDates.map { date ->
             DailyScreenOnCountUiState(
                 date = date,
                 dayOfWeek = date.dayOfWeek,
-                count = eventsByDate[date] ?: 0
+                count = eventsByDate[date] ?: 0,
+                hourlyCounts = (0..23).map { hour ->
+                    HourlyScreenOnCountUiState(
+                        hour = hour,
+                        count = eventsByDateAndHour[date]?.get(hour) ?: 0
+                    )
+                }
             )
         }
         val dayOfWeekPatterns = dailyScreenOnCounts.map { dailyCount ->
