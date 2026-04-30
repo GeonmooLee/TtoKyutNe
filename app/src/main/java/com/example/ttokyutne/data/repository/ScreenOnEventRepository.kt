@@ -43,6 +43,10 @@ class ScreenOnEventRepository(
         return screenOnEventDao.getTodayEvents(startOfDayMillis(nowMillis))
     }
 
+    suspend fun getEventsBetween(startMillis: Long, endMillis: Long): List<ScreenOnEventEntity> {
+        return screenOnEventDao.getEventsBetween(startMillis, endMillis)
+    }
+
     suspend fun deleteAllEvents() {
         screenOnEventDao.deleteAllEvents()
     }

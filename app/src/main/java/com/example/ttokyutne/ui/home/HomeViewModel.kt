@@ -16,6 +16,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneId
 import kotlin.math.roundToLong
 
 private const val LOG_TAG = "Ttokyeonne"
@@ -29,6 +32,7 @@ class HomeViewModel(
 
     init {
         refreshTodayStats()
+        refreshWeeklyStats()
         refreshSettings()
     }
 
@@ -38,6 +42,7 @@ class HomeViewModel(
 
             val recordedEvent = screenOnEventRepository.recordTestEvent()
             loadTodayStats()
+            loadWeeklyStats()
 
             _uiState.update { it.copy(isSavingTestEvent = false) }
             Log.d(
@@ -50,6 +55,12 @@ class HomeViewModel(
     fun refreshTodayStats() {
         viewModelScope.launch {
             loadTodayStats()
+        }
+    }
+
+    fun refreshWeeklyStats() {
+        viewModelScope.launch {
+            loadWeeklyStats()
         }
     }
 
@@ -95,6 +106,7 @@ class HomeViewModel(
         viewModelScope.launch {
             settingsRepository.deleteAllAppData()
             loadTodayStats()
+            loadWeeklyStats()
             Log.d(LOG_TAG, "Deleted screen_on_event and phrase_history data")
         }
     }
@@ -131,6 +143,67 @@ class HomeViewModel(
         }
 
         Log.d(LOG_TAG, "Loaded today screen_on_event count=${todayEvents.size}")
+    }
+
+    private suspend fun loadWeeklyStats(nowMillis: Long = System.currentTimeMillis()) {
+        val zoneId = ZoneId.systemDefault()
+        val today = LocalDate.ofInstant(Instant.ofEpochMilli(nowMillis), zoneId)
+        val startDate = today.minusDays(6)
+        val weekDates = (0L..6L).map { dayOffset -> startDate.plusDays(dayOffset) }
+        val startMillis = startDate.atStartOfDay(zoneId).toInstant().toEpochMilli()
+        val endMillis = today.plusDays(1).atStartOfDay(zoneId).toInstant().toEpochMilli()
+        val weeklyEvents = screenOnEventRepository.getEventsBetween(startMillis, endMillis)
+        val eventsByDate = weeklyEvents
+            .groupingBy { event ->
+                Instant.ofEpochMilli(event.screenOnTime).atZone(zoneId).toLocalDate()
+            }
+            .eachCount()
+        val dailyScreenOnCounts = weekDates.map { date ->
+            DailyScreenOnCountUiState(
+                date = date,
+                dayOfWeek = date.dayOfWeek,
+                count = eventsByDate[date] ?: 0
+            )
+        }
+        val dayOfWeekPatterns = dailyScreenOnCounts.map { dailyCount ->
+            DayOfWeekScreenOnPatternUiState(
+                dayOfWeek = dailyCount.dayOfWeek,
+                count = dailyCount.count
+            )
+        }
+        val busiestHour = weeklyEvents
+            .groupingBy { event ->
+                Instant.ofEpochMilli(event.screenOnTime).atZone(zoneId).hour
+            }
+            .eachCount()
+            .entries
+            .sortedWith(compareByDescending<Map.Entry<Int, Int>> { it.value }.thenBy { it.key })
+            .firstOrNull()
+            ?.let { hourCount ->
+                BusiestHourUiState(
+                    hour = hourCount.key,
+                    count = hourCount.value
+                )
+            }
+        val intervalEvents = weeklyEvents.mapNotNull { it.intervalSeconds }
+        val weeklyAnalysis = WeeklyAnalysisUiState(
+            totalScreenOnCount = weeklyEvents.size,
+            dailyScreenOnCounts = dailyScreenOnCounts,
+            dayOfWeekPatterns = dayOfWeekPatterns,
+            busiestHour = busiestHour,
+            averageIntervalSeconds = intervalEvents.takeIf { it.isNotEmpty() }
+                ?.average()
+                ?.roundToLong(),
+            recheckWithinOneMinuteCount = intervalEvents.count { it <= 60L },
+            recheckWithinTenMinutesCount = intervalEvents.count { it <= 600L }
+        )
+
+        _uiState.update { it.copy(weeklyAnalysis = weeklyAnalysis) }
+
+        Log.d(
+            LOG_TAG,
+            "Loaded weekly screen_on_event count=${weeklyEvents.size}, startDate=$startDate, endDate=$today"
+        )
     }
 
     private suspend fun loadSettings() {

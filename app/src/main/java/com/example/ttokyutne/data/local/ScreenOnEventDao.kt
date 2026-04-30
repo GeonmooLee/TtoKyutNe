@@ -15,6 +15,9 @@ interface ScreenOnEventDao {
     @Query("SELECT * FROM screen_on_event WHERE screenOnTime >= :startOfDayMillis ORDER BY screenOnTime ASC, id ASC")
     suspend fun getTodayEvents(startOfDayMillis: Long): List<ScreenOnEventEntity>
 
+    @Query("SELECT * FROM screen_on_event WHERE screenOnTime >= :startMillis AND screenOnTime < :endMillis ORDER BY screenOnTime ASC, id ASC")
+    suspend fun getEventsBetween(startMillis: Long, endMillis: Long): List<ScreenOnEventEntity>
+
     @Query("DELETE FROM screen_on_event")
     suspend fun deleteAllEvents()
 }

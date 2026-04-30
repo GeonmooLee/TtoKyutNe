@@ -109,6 +109,7 @@ class MainActivity : ComponentActivity() {
         notificationPermissionGranted = isNotificationPermissionGranted()
         if (::homeViewModel.isInitialized) {
             homeViewModel.refreshTodayStats()
+            homeViewModel.refreshWeeklyStats()
         }
     }
 
