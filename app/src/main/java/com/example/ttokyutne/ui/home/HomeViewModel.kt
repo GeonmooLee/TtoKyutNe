@@ -9,6 +9,7 @@ import com.example.ttokyutne.data.local.AppDatabase
 import com.example.ttokyutne.data.local.UserSettingsEntity
 import com.example.ttokyutne.data.repository.ScreenOnEventRepository
 import com.example.ttokyutne.data.repository.SettingsRepository
+import com.example.ttokyutne.settings.RecheckAlertMode
 import com.example.ttokyutne.ui.settings.SettingsUiState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -66,11 +67,27 @@ class HomeViewModel(
         }
     }
 
+    fun updateRecheckAlertMode(mode: RecheckAlertMode) {
+        viewModelScope.launch {
+            val settings = settingsRepository.updateRecheckAlertMode(mode)
+            _uiState.update { it.copy(settings = settings.toUiState()) }
+            Log.d(LOG_TAG, "Updated recheckAlertMode=${mode.storageValue}")
+        }
+    }
+
     fun updateMinIntervalSeconds(seconds: Long) {
         viewModelScope.launch {
             val settings = settingsRepository.updateMinIntervalSeconds(seconds)
             _uiState.update { it.copy(settings = settings.toUiState()) }
             Log.d(LOG_TAG, "Updated minIntervalSeconds=$seconds")
+        }
+    }
+
+    fun updateVibrationEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            val settings = settingsRepository.updateVibrationEnabled(enabled)
+            _uiState.update { it.copy(settings = settings.toUiState()) }
+            Log.d(LOG_TAG, "Updated vibrationEnabled=$enabled")
         }
     }
 
@@ -121,7 +138,7 @@ class HomeViewModel(
         _uiState.update { it.copy(settings = settings.toUiState()) }
         Log.d(
             LOG_TAG,
-            "Loaded settings notificationEnabled=${settings.notificationEnabled}, minIntervalSeconds=${settings.minIntervalSeconds}"
+            "Loaded settings notificationEnabled=${settings.notificationEnabled}, minIntervalSeconds=${settings.minIntervalSeconds}, vibrationEnabled=${settings.vibrationEnabled}, recheckAlertMode=${settings.recheckAlertMode}"
         )
     }
 
@@ -129,6 +146,8 @@ class HomeViewModel(
         return SettingsUiState(
             notificationEnabled = notificationEnabled,
             minIntervalSeconds = minIntervalSeconds,
+            vibrationEnabled = vibrationEnabled,
+            recheckAlertMode = RecheckAlertMode.fromStorageValue(recheckAlertMode),
             quietHoursEnabled = quietHoursEnabled,
             dataRetentionDays = dataRetentionDays
         )

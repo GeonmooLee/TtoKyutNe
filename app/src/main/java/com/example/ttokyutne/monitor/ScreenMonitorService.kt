@@ -14,6 +14,8 @@ import com.example.ttokyutne.data.repository.PhraseRepository
 import com.example.ttokyutne.data.repository.ScreenOnEventRepository
 import com.example.ttokyutne.data.repository.SettingsRepository
 import com.example.ttokyutne.notification.NotificationHelper
+import com.example.ttokyutne.phrase.PhraseLibrary
+import com.example.ttokyutne.settings.RecheckAlertMode
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -128,8 +130,9 @@ class ScreenMonitorService : Service() {
 
             else -> {
                 val settings = settingsRepository.getSettings()
-                if (!settings.notificationEnabled) {
-                    Log.d(LOG_TAG, "Recheck alert skipped: notificationEnabled=false")
+                val alertMode = RecheckAlertMode.fromStorageValue(settings.recheckAlertMode)
+                if (alertMode == RecheckAlertMode.Off) {
+                    Log.d(LOG_TAG, "Recheck alert skipped: recheckAlertMode=${alertMode.storageValue}")
                     return
                 }
 
@@ -150,12 +153,20 @@ class ScreenMonitorService : Service() {
                 }
 
                 val todayScreenOnCount = screenOnEventRepository.getTodayEvents().size
-                val selectedPhrase = phraseRepository.selectPhrase(
+                val selectedPhrase = if (alertMode == RecheckAlertMode.WithPhrase) {
+                    phraseRepository.selectPhrase(
+                        intervalSeconds = intervalSeconds,
+                        todayScreenOnCount = todayScreenOnCount
+                    )
+                } else {
+                    null
+                }
+                val contentText = selectedPhrase?.message ?: buildSimpleRecheckAlertText(
                     intervalSeconds = intervalSeconds,
                     todayScreenOnCount = todayScreenOnCount
                 )
-                val shown = notificationHelper.showRecheckAlert(selectedPhrase.message)
-                if (shown) {
+                val shown = notificationHelper.showRecheckAlert(contentText)
+                if (shown && selectedPhrase != null) {
                     phraseRepository.saveSelectedPhrase(
                         phraseId = selectedPhrase.phrase.id,
                         screenOnEventId = screenOnEventId
@@ -163,9 +174,17 @@ class ScreenMonitorService : Service() {
                 }
                 Log.d(
                     LOG_TAG,
-                    "Recheck alert shown=$shown, phraseId=${selectedPhrase.phrase.id}, category=${selectedPhrase.phrase.category}, intervalSeconds=$intervalSeconds, minIntervalSeconds=${settings.minIntervalSeconds}"
+                    "Recheck alert shown=$shown, mode=${alertMode.storageValue}, phraseId=${selectedPhrase?.phrase?.id}, category=${selectedPhrase?.phrase?.category}, intervalSeconds=$intervalSeconds, minIntervalSeconds=${settings.minIntervalSeconds}"
                 )
             }
         }
+    }
+
+    private fun buildSimpleRecheckAlertText(
+        intervalSeconds: Long,
+        todayScreenOnCount: Int
+    ): String {
+        val interval = PhraseLibrary.formatIntervalSeconds(intervalSeconds)
+        return "$interval 만에 다시 켰어요.\n오늘 화면 켠 횟수 ${todayScreenOnCount}회"
     }
 }

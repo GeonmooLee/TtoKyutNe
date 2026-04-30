@@ -34,6 +34,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.example.ttokyutne.settings.RecheckAlertMode
 import com.example.ttokyutne.ui.theme.TtoKyutNeTheme
 
 private val Canvas = Color(0xFFF6F8FA)
@@ -58,13 +59,15 @@ fun SettingsScreen(
     settings: SettingsUiState,
     notificationPermissionGranted: Boolean,
     onBack: () -> Unit,
-    onNotificationEnabledChange: (Boolean) -> Unit,
+    onRecheckAlertModeChange: (RecheckAlertMode) -> Unit,
     onMinIntervalSecondsChange: (Long) -> Unit,
     onDeleteAllData: () -> Unit,
     onOpenNotificationSettings: () -> Unit,
+    onOpenRecheckAlertChannelSettings: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     var showDeleteDialog by remember { mutableStateOf(false) }
+    var showVibrationGuideDialog by remember { mutableStateOf(false) }
     BackHandler(onBack = onBack)
 
     Scaffold(
@@ -85,10 +88,12 @@ fun SettingsScreen(
                 NotificationPermissionCard(onOpenNotificationSettings = onOpenNotificationSettings)
             }
 
-            NotificationToggleCard(
-                enabled = settings.notificationEnabled,
-                onEnabledChange = onNotificationEnabledChange
+            RecheckAlertModeCard(
+                selectedMode = settings.recheckAlertMode,
+                onModeChange = onRecheckAlertModeChange
             )
+
+            VibrationGuideCard(onGuideClick = { showVibrationGuideDialog = true })
 
             IntervalSelectorCard(
                 selectedSeconds = settings.minIntervalSeconds,
@@ -124,6 +129,36 @@ fun SettingsScreen(
             dismissButton = {
                 TextButton(onClick = { showDeleteDialog = false }) {
                     Text(text = "취소")
+                }
+            }
+        )
+    }
+
+    if (showVibrationGuideDialog) {
+        AlertDialog(
+            onDismissRequest = { showVibrationGuideDialog = false },
+            title = { Text(text = "알림 진동만 끄는 방법") },
+            text = {
+                Text(
+                    text = "Android 설정에서 또켰네 알림 채널의 진동을 직접 꺼주세요.\n\n" +
+                        "1. 시스템 설정 화면이 열리면 '또켰네 알림'을 확인해요.\n" +
+                        "2. '진동' 또는 '소리 및 진동' 항목을 꺼요.\n" +
+                        "3. 알림 자체는 켜둬야 화면을 켰을 때 문구가 보여요."
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showVibrationGuideDialog = false
+                        onOpenRecheckAlertChannelSettings()
+                    }
+                ) {
+                    Text(text = "채널 설정 열기", fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showVibrationGuideDialog = false }) {
+                    Text(text = "닫기")
                 }
             }
         )
@@ -179,7 +214,7 @@ private fun NotificationPermissionCard(onOpenNotificationSettings: () -> Unit) {
                 color = Ink
             )
             Text(
-                text = "감성 문구 알림을 켜도 Android 알림 권한이 꺼져 있으면 또켰네 알림이 표시되지 않아요.",
+                text = "알림 방식과 관계없이 Android 알림 권한이 꺼져 있으면 또켰네 알림이 표시되지 않아요.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = Muted
             )
@@ -198,10 +233,94 @@ private fun NotificationPermissionCard(onOpenNotificationSettings: () -> Unit) {
 }
 
 @Composable
-private fun NotificationToggleCard(
-    enabled: Boolean,
-    onEnabledChange: (Boolean) -> Unit
+private fun RecheckAlertModeCard(
+    selectedMode: RecheckAlertMode,
+    onModeChange: (RecheckAlertMode) -> Unit
 ) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(8.dp),
+        color = Color.White,
+        border = BorderStroke(1.dp, Line)
+    ) {
+        Column(
+            modifier = Modifier.padding(18.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp)
+        ) {
+            Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
+                Text(
+                    text = "재확인 알림 방식",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = Ink
+                )
+                Text(
+                    text = "화면 켜짐 기록은 어떤 모드에서도 계속 저장됩니다.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Muted
+                )
+            }
+            AlertModeSwitchRow(
+                title = "감성 문구 포함",
+                description = "재확인 간격과 함께 짧은 공감 문구를 보여줘요.",
+                selected = selectedMode == RecheckAlertMode.WithPhrase,
+                onSelected = { onModeChange(RecheckAlertMode.WithPhrase) }
+            )
+            AlertModeSwitchRow(
+                title = "감성 문구 없이 알림",
+                description = "재확인 간격과 오늘 화면 켠 횟수만 보여줘요.",
+                selected = selectedMode == RecheckAlertMode.Simple,
+                onSelected = { onModeChange(RecheckAlertMode.Simple) }
+            )
+            AlertModeSwitchRow(
+                title = "알림 끄기",
+                description = "기록은 저장하지만 재확인 알림은 보내지 않아요.",
+                selected = selectedMode == RecheckAlertMode.Off,
+                onSelected = { onModeChange(RecheckAlertMode.Off) }
+            )
+        }
+    }
+}
+
+@Composable
+private fun AlertModeSwitchRow(
+    title: String,
+    description: String,
+    selected: Boolean,
+    onSelected: () -> Unit
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.Bold,
+                color = Ink
+            )
+            Text(
+                text = description,
+                style = MaterialTheme.typography.bodyMedium,
+                color = Muted
+            )
+        }
+        Switch(
+            checked = selected,
+            onCheckedChange = { checked ->
+                if (checked) onSelected()
+            }
+        )
+    }
+}
+
+@Composable
+private fun VibrationGuideCard(onGuideClick: () -> Unit) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(8.dp),
@@ -220,21 +339,27 @@ private fun NotificationToggleCard(
                 verticalArrangement = Arrangement.spacedBy(5.dp)
             ) {
                 Text(
-                    text = "감성 문구 알림",
+                    text = "알림 진동 끄기",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = Ink
                 )
                 Text(
-                    text = "꺼도 화면 켜짐 기록은 계속 저장됩니다.",
+                    text = "Android 알림 채널에서 진동만 끄는 방법을 안내해요.",
                     style = MaterialTheme.typography.bodyMedium,
                     color = Muted
                 )
             }
-            Switch(
-                checked = enabled,
-                onCheckedChange = onEnabledChange
-            )
+            Button(
+                onClick = onGuideClick,
+                shape = RoundedCornerShape(8.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Forest,
+                    contentColor = Color.White
+                )
+            ) {
+                Text(text = "끄는 방법", fontWeight = FontWeight.Bold)
+            }
         }
     }
 }
@@ -364,10 +489,11 @@ private fun SettingsScreenPreview() {
             settings = SettingsUiState(),
             notificationPermissionGranted = false,
             onBack = {},
-            onNotificationEnabledChange = {},
+            onRecheckAlertModeChange = {},
             onMinIntervalSecondsChange = {},
             onDeleteAllData = {},
-            onOpenNotificationSettings = {}
+            onOpenNotificationSettings = {},
+            onOpenRecheckAlertChannelSettings = {}
         )
     }
 }

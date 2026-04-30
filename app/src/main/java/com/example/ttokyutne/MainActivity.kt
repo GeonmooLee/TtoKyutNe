@@ -20,6 +20,8 @@ import androidx.compose.runtime.setValue
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModelProvider
 import com.example.ttokyutne.monitor.ScreenMonitorService
+import com.example.ttokyutne.notification.NotificationHelper
+import com.example.ttokyutne.notification.RECHECK_ALERT_CHANNEL_ID
 import com.example.ttokyutne.ui.analysis.TodayAnalysisScreen
 import com.example.ttokyutne.ui.home.HomeScreen
 import com.example.ttokyutne.ui.home.HomeViewModel
@@ -90,10 +92,11 @@ class MainActivity : ComponentActivity() {
                             settings = uiState.settings,
                             notificationPermissionGranted = notificationPermissionGranted,
                             onBack = { currentScreen = AppScreen.Home },
-                            onNotificationEnabledChange = homeViewModel::updateNotificationEnabled,
+                            onRecheckAlertModeChange = homeViewModel::updateRecheckAlertMode,
                             onMinIntervalSecondsChange = homeViewModel::updateMinIntervalSeconds,
                             onDeleteAllData = homeViewModel::deleteAllAppData,
-                            onOpenNotificationSettings = ::openNotificationSettings
+                            onOpenNotificationSettings = ::openNotificationSettings,
+                            onOpenRecheckAlertChannelSettings = ::openRecheckAlertChannelSettings
                         )
                     }
                 }
@@ -140,6 +143,22 @@ class MainActivity : ComponentActivity() {
         val intent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
                 putExtra(Settings.EXTRA_APP_PACKAGE, packageName)
+            }
+        } else {
+            Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                data = Uri.parse("package:$packageName")
+            }
+        }
+        startActivity(intent)
+    }
+
+    private fun openRecheckAlertChannelSettings() {
+        NotificationHelper(this).createNotificationChannels()
+
+        val intent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            Intent(Settings.ACTION_CHANNEL_NOTIFICATION_SETTINGS).apply {
+                putExtra(Settings.EXTRA_APP_PACKAGE, packageName)
+                putExtra(Settings.EXTRA_CHANNEL_ID, RECHECK_ALERT_CHANNEL_ID)
             }
         } else {
             Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {

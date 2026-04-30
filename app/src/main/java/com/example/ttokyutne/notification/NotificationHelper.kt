@@ -15,9 +15,15 @@ import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import com.example.ttokyutne.MainActivity
 
-private const val MONITOR_CHANNEL_ID = "screen_monitor"
-private const val RECHECK_ALERT_CHANNEL_ID = "recheck_alert_channel"
+private const val MONITOR_CHANNEL_ID = "screen_monitor_silent"
+const val RECHECK_ALERT_CHANNEL_ID = "recheck_alert_vibrate_channel"
 private const val RECHECK_ALERT_NOTIFICATION_ID = 2001
+private val RECHECK_VIBRATION_PATTERN = longArrayOf(0L, 160L, 80L, 120L)
+private val UNUSED_MONITOR_CHANNEL_IDS = listOf("screen_monitor")
+private val UNUSED_RECHECK_CHANNEL_IDS = listOf(
+    "recheck_alert_channel",
+    "recheck_alert_silent_channel"
+)
 
 class NotificationHelper(
     private val context: Context
@@ -28,33 +34,46 @@ class NotificationHelper(
         val notificationManager = context.getSystemService(NotificationManager::class.java)
         val monitorChannel = NotificationChannel(
             MONITOR_CHANNEL_ID,
-            "또켰네 실행 중",
-            NotificationManager.IMPORTANCE_LOW
+            "화면 감지",
+            NotificationManager.IMPORTANCE_MIN
         ).apply {
-            description = "또켰네가 화면 재확인 간격을 기록 중입니다"
+            description = "화면 재확인 간격을 조용히 기록합니다"
+            enableVibration(false)
+            setSound(null, null)
+            setShowBadge(false)
+            lockscreenVisibility = Notification.VISIBILITY_SECRET
         }
 
-        val recheckAlertChannel = NotificationChannel(
+        val recheckVibrateChannel = NotificationChannel(
             RECHECK_ALERT_CHANNEL_ID,
             "또켰네 알림",
             NotificationManager.IMPORTANCE_HIGH
         ).apply {
             description = "짧은 간격으로 화면을 다시 켰을 때 표시되는 알림입니다"
             lockscreenVisibility = Notification.VISIBILITY_PUBLIC
+            enableVibration(true)
+            vibrationPattern = RECHECK_VIBRATION_PATTERN
         }
 
         notificationManager.createNotificationChannel(monitorChannel)
-        notificationManager.createNotificationChannel(recheckAlertChannel)
+        notificationManager.createNotificationChannel(recheckVibrateChannel)
+        UNUSED_MONITOR_CHANNEL_IDS.forEach(notificationManager::deleteNotificationChannel)
+        UNUSED_RECHECK_CHANNEL_IDS.forEach(notificationManager::deleteNotificationChannel)
     }
 
     fun buildMonitorNotification(): Notification {
         return NotificationCompat.Builder(context, MONITOR_CHANNEL_ID)
             .setSmallIcon(android.R.drawable.ic_dialog_info)
-            .setContentTitle("또켰네 실행 중")
-            .setContentText("또켰네가 화면 재확인 간격을 기록 중입니다")
+            .setContentTitle("화면 감지")
+            .setContentText("재확인 간격 기록 중")
             .setContentIntent(createMainActivityPendingIntent(100))
             .setOngoing(true)
-            .setPriority(NotificationCompat.PRIORITY_LOW)
+            .setPriority(NotificationCompat.PRIORITY_MIN)
+            .setCategory(NotificationCompat.CATEGORY_SERVICE)
+            .setSilent(true)
+            .setShowWhen(false)
+            .setLocalOnly(true)
+            .setVisibility(NotificationCompat.VISIBILITY_SECRET)
             .build()
     }
 
@@ -75,6 +94,11 @@ class NotificationHelper(
             .setWhen(now)
             .setShowWhen(true)
             .setAutoCancel(true)
+            .apply {
+                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+                    setVibrate(RECHECK_VIBRATION_PATTERN)
+                }
+            }
             .build()
 
         NotificationManagerCompat.from(context).notify(RECHECK_ALERT_NOTIFICATION_ID, notification)

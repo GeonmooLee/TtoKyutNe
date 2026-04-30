@@ -13,7 +13,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         UserSettingsEntity::class,
         PhraseHistoryEntity::class
     ],
-    version = 2,
+    version = 4,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -52,6 +52,37 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        private val migration2To3 = object : Migration(2, 3) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    """
+                    ALTER TABLE user_settings
+                    ADD COLUMN vibrationEnabled INTEGER NOT NULL DEFAULT 1
+                    """.trimIndent()
+                )
+            }
+        }
+
+        private val migration3To4 = object : Migration(3, 4) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    """
+                    ALTER TABLE user_settings
+                    ADD COLUMN recheckAlertMode TEXT NOT NULL DEFAULT 'WITH_PHRASE'
+                    """.trimIndent()
+                )
+                db.execSQL(
+                    """
+                    UPDATE user_settings
+                    SET recheckAlertMode = CASE
+                        WHEN notificationEnabled = 0 THEN 'SIMPLE'
+                        ELSE 'WITH_PHRASE'
+                    END
+                    """.trimIndent()
+                )
+            }
+        }
+
         fun getInstance(context: Context): AppDatabase {
             return instance ?: synchronized(this) {
                 instance ?: Room.databaseBuilder(
@@ -59,7 +90,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "ttokyutne.db"
                 )
-                    .addMigrations(migration1To2)
+                    .addMigrations(migration1To2, migration2To3, migration3To4)
                     .build()
                     .also { instance = it }
             }
