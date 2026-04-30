@@ -2,6 +2,7 @@ package com.example.ttokyutne.ui.settings
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -20,7 +21,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -84,26 +84,26 @@ fun SettingsScreen(
         ) {
             Header(onBack = onBack)
 
-            if (!notificationPermissionGranted) {
-                NotificationPermissionCard(onOpenNotificationSettings = onOpenNotificationSettings)
-            }
+            AppExplanationCard()
 
             RecheckAlertModeCard(
                 selectedMode = settings.recheckAlertMode,
                 onModeChange = onRecheckAlertModeChange
             )
 
-            VibrationGuideCard(onGuideClick = { showVibrationGuideDialog = true })
-
             IntervalSelectorCard(
                 selectedSeconds = settings.minIntervalSeconds,
                 onMinIntervalSecondsChange = onMinIntervalSecondsChange
             )
 
-            DataCard(
-                onDeleteClick = { showDeleteDialog = true },
+            NotificationPermissionCard(
+                notificationPermissionGranted = notificationPermissionGranted,
                 onOpenNotificationSettings = onOpenNotificationSettings
             )
+
+            VibrationGuideCard(onGuideClick = { showVibrationGuideDialog = true })
+
+            DataManagementCard(onDeleteClick = { showDeleteDialog = true })
 
             Spacer(modifier = Modifier.height(4.dp))
         }
@@ -114,7 +114,7 @@ fun SettingsScreen(
             onDismissRequest = { showDeleteDialog = false },
             title = { Text(text = "전체 데이터를 삭제할까요?") },
             text = {
-                Text(text = "screen_on_event와 phrase_history 기록이 모두 삭제됩니다. 이 작업은 되돌릴 수 없어요.")
+                Text(text = "화면 켜짐 기록과 문구 표시 기록이 모두 삭제됩니다. 설정값은 유지되고, 이 작업은 되돌릴 수 없어요.")
             },
             confirmButton = {
                 TextButton(
@@ -196,37 +196,77 @@ private fun Header(onBack: () -> Unit) {
 }
 
 @Composable
-private fun NotificationPermissionCard(onOpenNotificationSettings: () -> Unit) {
+private fun AppExplanationCard() {
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(8.dp),
-        color = Warm,
-        border = BorderStroke(1.dp, Color(0xFFFFD6C3))
+        color = Color.White,
+        border = BorderStroke(1.dp, Line)
     ) {
         Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
+            modifier = Modifier.padding(18.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Text(
-                text = "알림 권한이 꺼져 있어요",
+                text = "앱 설명",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 color = Ink
             )
             Text(
-                text = "알림 방식과 관계없이 Android 알림 권한이 꺼져 있으면 또켰네 알림이 표시되지 않아요.",
+                text = "또켰네는 로그인 없이, 서버 없이, 기록을 기기 안에만 저장합니다.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = Muted
+            )
+        }
+    }
+}
+
+@Composable
+private fun NotificationPermissionCard(
+    notificationPermissionGranted: Boolean,
+    onOpenNotificationSettings: () -> Unit
+) {
+    val warning = !notificationPermissionGranted
+
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(8.dp),
+        color = if (warning) Warm else Color.White,
+        border = BorderStroke(1.dp, if (warning) Color(0xFFFFD6C3) else Line)
+    ) {
+        Column(
+            modifier = Modifier.padding(18.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Text(
+                text = "알림 권한",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = Ink
+            )
+            Text(
+                text = if (warning) {
+                    "Android 13 이상에서 알림 권한이 꺼져 있으면 재확인 알림이 표시되지 않아요."
+                } else {
+                    "알림 권한이 허용되어 있으면 선택한 방식과 조건에 맞춰 알림을 받을 수 있어요."
+                },
                 style = MaterialTheme.typography.bodyMedium,
                 color = Muted
             )
             Button(
                 onClick = onOpenNotificationSettings,
+                modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(8.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = WarmInk,
+                    containerColor = if (warning) WarmInk else ForestDark,
                     contentColor = Color.White
                 )
             ) {
-                Text(text = "알림 권한 설정 열기", fontWeight = FontWeight.Bold)
+                Text(
+                    text = if (warning) "알림 권한 설정 열기" else "알림 설정 열기",
+                    fontWeight = FontWeight.Bold
+                )
             }
         }
     }
@@ -260,19 +300,19 @@ private fun RecheckAlertModeCard(
                     color = Muted
                 )
             }
-            AlertModeSwitchRow(
+            AlertModeOptionRow(
                 title = "감성 문구 포함",
-                description = "재확인 간격과 함께 짧은 공감 문구를 보여줘요.",
+                description = "짧은 공감 문구와 재확인 간격을 함께 보여줘요.",
                 selected = selectedMode == RecheckAlertMode.WithPhrase,
                 onSelected = { onModeChange(RecheckAlertMode.WithPhrase) }
             )
-            AlertModeSwitchRow(
+            AlertModeOptionRow(
                 title = "감성 문구 없이 알림",
                 description = "재확인 간격과 오늘 화면 켠 횟수만 보여줘요.",
                 selected = selectedMode == RecheckAlertMode.Simple,
                 onSelected = { onModeChange(RecheckAlertMode.Simple) }
             )
-            AlertModeSwitchRow(
+            AlertModeOptionRow(
                 title = "알림 끄기",
                 description = "기록은 저장하지만 재확인 알림은 보내지 않아요.",
                 selected = selectedMode == RecheckAlertMode.Off,
@@ -283,39 +323,51 @@ private fun RecheckAlertModeCard(
 }
 
 @Composable
-private fun AlertModeSwitchRow(
+private fun AlertModeOptionRow(
     title: String,
     description: String,
     selected: Boolean,
     onSelected: () -> Unit
 ) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onSelected),
+        shape = RoundedCornerShape(8.dp),
+        color = if (selected) Color(0xFFE2F2EC) else Color.White,
+        border = BorderStroke(1.dp, if (selected) Color(0xFFC8E5DC) else Line)
     ) {
-        Column(
-            modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(4.dp)
+        Row(
+            modifier = Modifier.padding(14.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.bodyLarge,
-                fontWeight = FontWeight.Bold,
-                color = Ink
-            )
-            Text(
-                text = description,
-                style = MaterialTheme.typography.bodyMedium,
-                color = Muted
-            )
-        }
-        Switch(
-            checked = selected,
-            onCheckedChange = { checked ->
-                if (checked) onSelected()
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = Ink
+                )
+                Text(
+                    text = description,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Muted
+                )
             }
-        )
+            if (selected) {
+                Text(
+                    text = "선택됨",
+                    modifier = Modifier.padding(start = 12.dp),
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = Forest
+                )
+            }
+        }
     }
 }
 
@@ -381,13 +433,19 @@ private fun IntervalSelectorCard(
         ) {
             Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
                 Text(
-                    text = "최소 알림 간격",
+                    text = "알림 조건",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = Ink
                 )
                 Text(
-                    text = "선택한 시간 이내에 다시 켰을 때만 알림을 표시해요.",
+                    text = "몇 분 이내에 다시 켰을 때 알림을 받을까요?",
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Ink
+                )
+                Text(
+                    text = "예를 들어 10분을 선택하면, 직전 확인 후 10분 이내에 다시 켰을 때만 재확인 알림이 표시됩니다.",
                     style = MaterialTheme.typography.bodyMedium,
                     color = Muted
                 )
@@ -437,10 +495,7 @@ private fun IntervalSelectorCard(
 }
 
 @Composable
-private fun DataCard(
-    onDeleteClick: () -> Unit,
-    onOpenNotificationSettings: () -> Unit
-) {
+private fun DataManagementCard(onDeleteClick: () -> Unit) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(8.dp),
@@ -452,22 +507,16 @@ private fun DataCard(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Text(
-                text = "데이터와 권한",
+                text = "데이터 관리",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 color = Ink
             )
-            Button(
-                onClick = onOpenNotificationSettings,
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(8.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = ForestDark,
-                    contentColor = Color.White
-                )
-            ) {
-                Text(text = "알림 권한 설정 열기", fontWeight = FontWeight.Bold)
-            }
+            Text(
+                text = "저장된 화면 켜짐 기록과 문구 표시 기록을 삭제할 수 있어요.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = Muted
+            )
             OutlinedButton(
                 onClick = onDeleteClick,
                 modifier = Modifier.fillMaxWidth(),
