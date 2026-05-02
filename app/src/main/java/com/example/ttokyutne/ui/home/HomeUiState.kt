@@ -5,7 +5,11 @@ import java.time.DayOfWeek
 import java.time.LocalDate
 
 data class HomeUiState(
-    val todayScreenOnCount: Int = 0,
+    val lastRecheckIntervalText: String = "42초",
+    val todayScreenOnCount: Int = 27,
+    val shortRecheckCount: Int = 8,
+    val shortestRecheckIntervalText: String = "12초",
+    val diffFromYesterday: Int = 4,
     val lastIntervalSeconds: Long? = null,
     val isSettingsLoaded: Boolean = false,
     val todayAnalysis: TodayAnalysisUiState = TodayAnalysisUiState(),

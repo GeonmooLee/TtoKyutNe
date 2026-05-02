@@ -139,7 +139,21 @@ class HomeViewModel(
 
         _uiState.update {
             it.copy(
-                todayScreenOnCount = todayEvents.size,
+                lastRecheckIntervalText = lastEvent?.intervalSeconds?.let(::formatHomeIntervalSeconds)
+                    ?: it.lastRecheckIntervalText,
+                todayScreenOnCount = if (todayEvents.isEmpty()) {
+                    it.todayScreenOnCount
+                } else {
+                    todayEvents.size
+                },
+                shortRecheckCount = if (todayEvents.isEmpty()) {
+                    it.shortRecheckCount
+                } else {
+                    intervalEvents.count { intervalSeconds -> intervalSeconds <= 60L }
+                },
+                shortestRecheckIntervalText = intervalEvents.minOrNull()
+                    ?.let(::formatHomeIntervalSeconds)
+                    ?: it.shortestRecheckIntervalText,
                 lastIntervalSeconds = lastEvent?.intervalSeconds,
                 todayAnalysis = todayAnalysis
             )
@@ -263,6 +277,17 @@ class HomeViewModel(
             }
 
             throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
+        }
+    }
+}
+
+private fun formatHomeIntervalSeconds(intervalSeconds: Long): String {
+    return when {
+        intervalSeconds < 60 -> "${intervalSeconds}초"
+        else -> {
+            val minutes = intervalSeconds / 60
+            val seconds = intervalSeconds % 60
+            if (seconds == 0L) "${minutes}분" else "${minutes}분 ${seconds}초"
         }
     }
 }
