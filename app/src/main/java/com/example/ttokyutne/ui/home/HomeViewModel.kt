@@ -151,6 +151,11 @@ class HomeViewModel(
         )
         val lastEvent = screenOnEventRepository.getLastEvent()
         val intervalEvents = todayEvents.mapNotNull { it.intervalSeconds }
+        val eventsByHour = todayEvents
+            .groupingBy { event ->
+                Instant.ofEpochMilli(event.screenOnTime).atZone(zoneId).hour
+            }
+            .eachCount()
         val shorterThanYesterdayCount = (yesterdayEvents.size - todayEvents.size).coerceAtLeast(0)
         val todayAnalysis = TodayAnalysisUiState(
             totalScreenOnCount = todayEvents.size,
@@ -159,6 +164,12 @@ class HomeViewModel(
                 ?.roundToLong(),
             shortestIntervalSeconds = intervalEvents.minOrNull(),
             recheckWithinTenMinutesCount = intervalEvents.count { it <= 600L },
+            hourlyScreenOnCounts = (0..23).map { hour ->
+                HourlyScreenOnCountUiState(
+                    hour = hour,
+                    count = eventsByHour[hour] ?: 0
+                )
+            },
             recentRecords = todayEvents
                 .asReversed()
                 .take(5)

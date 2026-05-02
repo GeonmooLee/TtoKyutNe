@@ -22,6 +22,7 @@ data class TodayAnalysisUiState(
     val averageIntervalSeconds: Long? = null,
     val shortestIntervalSeconds: Long? = null,
     val recheckWithinTenMinutesCount: Int = 0,
+    val hourlyScreenOnCounts: List<HourlyScreenOnCountUiState> = emptyList(),
     val recentRecords: List<RecentScreenOnRecordUiState> = emptyList()
 )
 

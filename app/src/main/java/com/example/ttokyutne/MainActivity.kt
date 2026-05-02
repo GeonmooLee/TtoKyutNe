@@ -124,7 +124,9 @@ class MainActivity : ComponentActivity() {
                             AppScreen.TodayAnalysis -> {
                                 TodayAnalysisScreen(
                                     analysis = uiState.todayAnalysis,
-                                    onBack = { currentScreen = AppScreen.Home }
+                                    onBack = { currentScreen = AppScreen.Home },
+                                    onOpenWeeklyAnalysis = ::openWeeklyAnalysis,
+                                    onOpenSettings = ::openSettings
                                 )
                             }
 
