@@ -115,9 +115,19 @@ class HomeViewModel(
     }
 
     private suspend fun loadTodayStats() {
+        val nowMillis = System.currentTimeMillis()
+        val zoneId = ZoneId.systemDefault()
+        val today = LocalDate.ofInstant(Instant.ofEpochMilli(nowMillis), zoneId)
+        val todayStartMillis = today.atStartOfDay(zoneId).toInstant().toEpochMilli()
+        val yesterdayStartMillis = today.minusDays(1).atStartOfDay(zoneId).toInstant().toEpochMilli()
         val todayEvents = screenOnEventRepository.getTodayEvents()
+        val yesterdayEvents = screenOnEventRepository.getEventsBetween(
+            startMillis = yesterdayStartMillis,
+            endMillis = todayStartMillis
+        )
         val lastEvent = screenOnEventRepository.getLastEvent()
         val intervalEvents = todayEvents.mapNotNull { it.intervalSeconds }
+        val shorterThanYesterdayCount = (yesterdayEvents.size - todayEvents.size).coerceAtLeast(0)
         val todayAnalysis = TodayAnalysisUiState(
             totalScreenOnCount = todayEvents.size,
             averageIntervalSeconds = intervalEvents.takeIf { it.isNotEmpty() }
@@ -140,20 +150,13 @@ class HomeViewModel(
         _uiState.update {
             it.copy(
                 lastRecheckIntervalText = lastEvent?.intervalSeconds?.let(::formatHomeIntervalSeconds)
-                    ?: it.lastRecheckIntervalText,
-                todayScreenOnCount = if (todayEvents.isEmpty()) {
-                    it.todayScreenOnCount
-                } else {
-                    todayEvents.size
-                },
-                shortRecheckCount = if (todayEvents.isEmpty()) {
-                    it.shortRecheckCount
-                } else {
-                    intervalEvents.count { intervalSeconds -> intervalSeconds <= 60L }
-                },
+                    ?: "0초",
+                todayScreenOnCount = todayEvents.size,
+                shortRecheckCount = intervalEvents.count { intervalSeconds -> intervalSeconds <= 60L },
                 shortestRecheckIntervalText = intervalEvents.minOrNull()
                     ?.let(::formatHomeIntervalSeconds)
-                    ?: it.shortestRecheckIntervalText,
+                    ?: "0초",
+                diffFromYesterday = shorterThanYesterdayCount,
                 lastIntervalSeconds = lastEvent?.intervalSeconds,
                 todayAnalysis = todayAnalysis
             )
