@@ -131,7 +131,11 @@ class MainActivity : ComponentActivity() {
                             AppScreen.WeeklyAnalysis -> {
                                 WeeklyAnalysisScreen(
                                     analysis = uiState.weeklyAnalysis,
-                                    onBack = { currentScreen = AppScreen.Home }
+                                    onBack = { currentScreen = AppScreen.Home },
+                                    onOpenTodayAnalysis = ::openTodayAnalysis,
+                                    onOpenSettings = ::openSettings,
+                                    onPreviousWeekClick = homeViewModel::showPreviousWeekStats,
+                                    onNextWeekClick = homeViewModel::showNextWeekStats
                                 )
                             }
 
@@ -182,7 +186,7 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun openWeeklyAnalysis() {
-        homeViewModel.refreshWeeklyStats()
+        homeViewModel.refreshCurrentWeekStats()
         currentScreen = AppScreen.WeeklyAnalysis
     }
 

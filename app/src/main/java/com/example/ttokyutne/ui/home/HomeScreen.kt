@@ -104,7 +104,7 @@ fun HomeScreen(
             JjamkkanBottomBar(
                 selectedTab = HomeTab.Main,
                 onMainClick = {},
-                onAnalysisClick = onOpenTodayAnalysis,
+                onAnalysisClick = onOpenWeeklyAnalysis,
                 onSettingsClick = onOpenSettings
             )
         }
