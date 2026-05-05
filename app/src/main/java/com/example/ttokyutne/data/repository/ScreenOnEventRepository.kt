@@ -8,10 +8,6 @@ import java.time.ZoneId
 class ScreenOnEventRepository(
     private val screenOnEventDao: ScreenOnEventDao
 ) {
-    suspend fun recordTestEvent(nowMillis: Long = System.currentTimeMillis()): RecordedScreenOnEvent {
-        return recordScreenOnEvent(nowMillis)
-    }
-
     suspend fun recordScreenOnEvent(nowMillis: Long = System.currentTimeMillis()): RecordedScreenOnEvent {
         val previousEvent = screenOnEventDao.getLastEvent()
         val previousScreenOnTime = previousEvent?.screenOnTime
@@ -41,6 +37,10 @@ class ScreenOnEventRepository(
 
     suspend fun getTodayEvents(nowMillis: Long = System.currentTimeMillis()): List<ScreenOnEventEntity> {
         return screenOnEventDao.getTodayEvents(startOfDayMillis(nowMillis))
+    }
+
+    suspend fun getEventsBetween(startMillis: Long, endMillis: Long): List<ScreenOnEventEntity> {
+        return screenOnEventDao.getEventsBetween(startMillis, endMillis)
     }
 
     suspend fun deleteAllEvents() {

@@ -53,9 +53,8 @@ fun HomeScreen(
     uiState: HomeUiState = HomeUiState(),
     notificationPermissionGranted: Boolean = true,
     onOpenTodayAnalysis: () -> Unit = {},
+    onOpenWeeklyAnalysis: () -> Unit = {},
     onOpenSettings: () -> Unit = {},
-    onRecordTestEvent: () -> Unit = {},
-    onStartScreenMonitor: () -> Unit = {},
     onRequestNotificationPermission: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
@@ -73,7 +72,7 @@ fun HomeScreen(
         ) {
             AppHeader()
             HeroSection(lastIntervalSeconds = uiState.lastIntervalSeconds)
-            if (!notificationPermissionGranted) {
+            if (uiState.settings.monitoringEnabled && !notificationPermissionGranted) {
                 NotificationPermissionNotice(
                     onRequestNotificationPermission = onRequestNotificationPermission
                 )
@@ -85,12 +84,8 @@ fun HomeScreen(
             ReassurancePanel()
             ActionButtons(
                 onOpenTodayAnalysis = onOpenTodayAnalysis,
+                onOpenWeeklyAnalysis = onOpenWeeklyAnalysis,
                 onOpenSettings = onOpenSettings
-            )
-            ScreenMonitorButton(onStartScreenMonitor = onStartScreenMonitor)
-            DeveloperTestButton(
-                isSaving = uiState.isSavingTestEvent,
-                onRecordTestEvent = onRecordTestEvent
             )
             Spacer(modifier = Modifier.height(4.dp))
         }
@@ -162,7 +157,7 @@ private fun AppHeader() {
             border = BorderStroke(1.dp, Color(0xFFC8E5DC))
         ) {
             Text(
-                text = "v0.1",
+                text = "v0.2",
                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 7.dp),
                 style = MaterialTheme.typography.labelMedium,
                 fontWeight = FontWeight.Bold,
@@ -380,85 +375,57 @@ private fun ReassurancePanel() {
 @Composable
 private fun ActionButtons(
     onOpenTodayAnalysis: () -> Unit,
+    onOpenWeeklyAnalysis: () -> Unit,
     onOpenSettings: () -> Unit
 ) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(10.dp)
-    ) {
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            Button(
+                onClick = onOpenTodayAnalysis,
+                modifier = Modifier
+                    .weight(1f)
+                    .height(52.dp),
+                shape = RoundedCornerShape(8.dp),
+                contentPadding = PaddingValues(horizontal = 12.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Forest,
+                    contentColor = Color.White
+                )
+            ) {
+                Text(text = "오늘 분석", fontWeight = FontWeight.Bold)
+            }
+            OutlinedButton(
+                onClick = onOpenSettings,
+                modifier = Modifier
+                    .weight(1f)
+                    .height(52.dp),
+                shape = RoundedCornerShape(8.dp),
+                contentPadding = PaddingValues(horizontal = 12.dp),
+                border = BorderStroke(1.dp, Color(0xFFB8C9C4)),
+                colors = ButtonDefaults.outlinedButtonColors(
+                    contentColor = Forest
+                )
+            ) {
+                Text(text = "설정", fontWeight = FontWeight.Bold)
+            }
+        }
         Button(
-            onClick = onOpenTodayAnalysis,
+            onClick = onOpenWeeklyAnalysis,
             modifier = Modifier
-                .weight(1f)
+                .fillMaxWidth()
                 .height(52.dp),
             shape = RoundedCornerShape(8.dp),
             contentPadding = PaddingValues(horizontal = 12.dp),
             colors = ButtonDefaults.buttonColors(
-                containerColor = Forest,
+                containerColor = BlueInk,
                 contentColor = Color.White
             )
         ) {
-            Text(text = "오늘 분석", fontWeight = FontWeight.Bold)
+            Text(text = "주간 분석", fontWeight = FontWeight.Bold)
         }
-        OutlinedButton(
-            onClick = onOpenSettings,
-            modifier = Modifier
-                .weight(1f)
-                .height(52.dp),
-            shape = RoundedCornerShape(8.dp),
-            contentPadding = PaddingValues(horizontal = 12.dp),
-            border = BorderStroke(1.dp, Color(0xFFB8C9C4)),
-            colors = ButtonDefaults.outlinedButtonColors(
-                contentColor = Forest
-            )
-        ) {
-            Text(text = "설정", fontWeight = FontWeight.Bold)
-        }
-    }
-}
-
-@Composable
-private fun ScreenMonitorButton(
-    onStartScreenMonitor: () -> Unit
-) {
-    Button(
-        onClick = onStartScreenMonitor,
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(52.dp),
-        shape = RoundedCornerShape(8.dp),
-        colors = ButtonDefaults.buttonColors(
-            containerColor = ForestDark,
-            contentColor = Color.White
-        )
-    ) {
-        Text(text = "화면 감지 시작", fontWeight = FontWeight.Bold)
-    }
-}
-
-@Composable
-private fun DeveloperTestButton(
-    isSaving: Boolean,
-    onRecordTestEvent: () -> Unit
-) {
-    Button(
-        onClick = onRecordTestEvent,
-        enabled = !isSaving,
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(52.dp),
-        shape = RoundedCornerShape(8.dp),
-        colors = ButtonDefaults.buttonColors(
-            containerColor = Ink,
-            contentColor = Color.White,
-            disabledContainerColor = Color(0xFF98A2B3),
-            disabledContentColor = Color.White
-        )
-    ) {
-        Text(
-            text = if (isSaving) "저장 중" else "개발용 테스트 이벤트 기록",
-            fontWeight = FontWeight.Bold
-        )
     }
 }
 

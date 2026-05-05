@@ -7,6 +7,8 @@ data class SettingsUiState(
     val minIntervalSeconds: Long = 600,
     val vibrationEnabled: Boolean = true,
     val recheckAlertMode: RecheckAlertMode = RecheckAlertMode.WithPhrase,
+    val onboardingCompleted: Boolean = false,
+    val monitoringEnabled: Boolean = false,
     val quietHoursEnabled: Boolean = false,
     val dataRetentionDays: Int = 365
 )

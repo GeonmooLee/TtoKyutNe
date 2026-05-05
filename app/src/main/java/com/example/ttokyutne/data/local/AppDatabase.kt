@@ -13,7 +13,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         UserSettingsEntity::class,
         PhraseHistoryEntity::class
     ],
-    version = 4,
+    version = 6,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -83,6 +83,40 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        private val migration4To5 = object : Migration(4, 5) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    """
+                    ALTER TABLE user_settings
+                    ADD COLUMN onboardingCompleted INTEGER NOT NULL DEFAULT 0
+                    """.trimIndent()
+                )
+                db.execSQL(
+                    """
+                    UPDATE user_settings
+                    SET onboardingCompleted = 1
+                    """.trimIndent()
+                )
+            }
+        }
+
+        private val migration5To6 = object : Migration(5, 6) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    """
+                    ALTER TABLE user_settings
+                    ADD COLUMN monitoringEnabled INTEGER NOT NULL DEFAULT 0
+                    """.trimIndent()
+                )
+                db.execSQL(
+                    """
+                    UPDATE user_settings
+                    SET monitoringEnabled = 1
+                    """.trimIndent()
+                )
+            }
+        }
+
         fun getInstance(context: Context): AppDatabase {
             return instance ?: synchronized(this) {
                 instance ?: Room.databaseBuilder(
@@ -90,7 +124,13 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "ttokyutne.db"
                 )
-                    .addMigrations(migration1To2, migration2To3, migration3To4)
+                    .addMigrations(
+                        migration1To2,
+                        migration2To3,
+                        migration3To4,
+                        migration4To5,
+                        migration5To6
+                    )
                     .build()
                     .also { instance = it }
             }
