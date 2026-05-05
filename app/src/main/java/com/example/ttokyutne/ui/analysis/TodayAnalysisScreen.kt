@@ -125,6 +125,7 @@ fun TodayAnalysisScreen(
     }
     val selectedHour = remember(chartData) { selectedChartHour(chartData) }
     val selectedValue = chartData.getOrElse(selectedHour) { 0 }
+    val hasChartData = chartData.any { it > 0 }
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
@@ -156,7 +157,7 @@ fun TodayAnalysisScreen(
             )
             Spacer(modifier = Modifier.height(18.dp))
             DailyDateSelector(
-                dateText = formatDailyDateLabel(),
+                dateText = formatDailyDateLabel(analysis.selectedDate),
                 onPreviousClick = onPreviousDateClick,
                 onNextClick = onNextDateClick
             )
@@ -165,15 +166,20 @@ fun TodayAnalysisScreen(
                 data = chartData,
                 selectedHour = selectedHour,
                 selectedValue = selectedValue,
+                hasData = hasChartData,
                 onHelpClick = onChartHelpClick
             )
             Spacer(modifier = Modifier.height(16.dp))
             DailyMetricGrid(analysis = analysis)
             Spacer(modifier = Modifier.height(16.dp))
-            DailyInsightCard(selectedHour = selectedHour)
+            DailyInsightCard(
+                selectedHour = selectedHour,
+                hasData = hasChartData
+            )
             Spacer(modifier = Modifier.height(20.dp))
             RecentRecordsSection(
-                records = analysis.recentRecords
+                records = analysis.recentRecords,
+                selectedDate = analysis.selectedDate
             )
             Spacer(modifier = Modifier.height(8.dp))
         }
@@ -466,6 +472,7 @@ private fun DailyLineChartCard(
     data: List<Int>,
     selectedHour: Int,
     selectedValue: Int,
+    hasData: Boolean,
     onHelpClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -503,7 +510,8 @@ private fun DailyLineChartCard(
             DailyLineChart(
                 data = data,
                 selectedHour = selectedHour,
-                selectedValue = selectedValue
+                selectedValue = selectedValue,
+                hasData = hasData
             )
         }
     }
@@ -516,6 +524,7 @@ private fun DailyLineChart(
     data: List<Int>,
     selectedHour: Int,
     selectedValue: Int,
+    hasData: Boolean,
     modifier: Modifier = Modifier
 ) {
     BoxWithConstraints(
@@ -576,13 +585,15 @@ private fun DailyLineChart(
                 }
                 val selectedPoint = points[selectedIndex]
 
-                drawLine(
-                    color = DailyAnalysisColors.AccentCoralSoft,
-                    start = Offset(selectedPoint.x, topPx),
-                    end = Offset(selectedPoint.x, bottomPx),
-                    strokeWidth = 1.dp.toPx(),
-                    pathEffect = guideEffect
-                )
+                if (hasData) {
+                    drawLine(
+                        color = DailyAnalysisColors.AccentCoralSoft,
+                        start = Offset(selectedPoint.x, topPx),
+                        end = Offset(selectedPoint.x, bottomPx),
+                        strokeWidth = 1.dp.toPx(),
+                        pathEffect = guideEffect
+                    )
+                }
 
                 val path = Path().apply {
                     moveTo(points.first().x, points.first().y)
@@ -603,7 +614,7 @@ private fun DailyLineChart(
                 )
 
                 points.forEachIndexed { index, point ->
-                    val selected = index == selectedIndex
+                    val selected = hasData && index == selectedIndex
                     drawCircle(
                         color = if (selected) DailyAnalysisColors.White else DailyAnalysisColors.AccentLavender,
                         radius = if (selected) 9.dp.toPx() else 4.2.dp.toPx(),
@@ -656,29 +667,31 @@ private fun DailyLineChart(
             )
         }
 
-        Surface(
-            modifier = Modifier
-                .align(Alignment.TopStart)
-                .offset(x = tooltipX, y = tooltipY)
-                .width(tooltipWidth)
-                .height(34.dp),
-            shape = RoundedCornerShape(11.dp),
-            color = DailyAnalysisColors.White,
-            shadowElevation = 2.dp,
-            border = BorderStroke(1.dp, DailyAnalysisColors.AccentLavender.copy(alpha = 0.55f))
-        ) {
-            Box(contentAlignment = Alignment.Center) {
-                Text(
-                    text = "${selectedHour}시 · ${selectedValue}회",
-                    color = DailyAnalysisColors.AccentLavenderDeep,
-                    fontSize = if (compact) 13.2.sp else 14.5.sp,
-                    lineHeight = 18.sp,
-                    fontFamily = dailyAnalysisFontFamily(),
-                    fontWeight = FontWeight.ExtraBold,
-                    letterSpacing = 0.sp,
-                    maxLines = 1,
-                    overflow = TextOverflow.Clip
-                )
+        if (hasData) {
+            Surface(
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .offset(x = tooltipX, y = tooltipY)
+                    .width(tooltipWidth)
+                    .height(34.dp),
+                shape = RoundedCornerShape(11.dp),
+                color = DailyAnalysisColors.White,
+                shadowElevation = 2.dp,
+                border = BorderStroke(1.dp, DailyAnalysisColors.AccentLavender.copy(alpha = 0.55f))
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Text(
+                        text = "${selectedHour}시 · ${selectedValue}회",
+                        color = DailyAnalysisColors.AccentLavenderDeep,
+                        fontSize = if (compact) 13.2.sp else 14.5.sp,
+                        lineHeight = 18.sp,
+                        fontFamily = dailyAnalysisFontFamily(),
+                        fontWeight = FontWeight.ExtraBold,
+                        letterSpacing = 0.sp,
+                        maxLines = 1,
+                        overflow = TextOverflow.Clip
+                    )
+                }
             }
         }
     }
@@ -808,6 +821,7 @@ private fun DailyMetricCard(
 @Composable
 private fun DailyInsightCard(
     selectedHour: Int,
+    hasData: Boolean,
     modifier: Modifier = Modifier
 ) {
     SoftDailyAnalysisCard(
@@ -834,7 +848,10 @@ private fun DailyInsightCard(
                 iconSize = 23.dp
             )
             Text(
-                text = busiestHourInsight(selectedHour),
+                text = busiestHourInsight(
+                    selectedHour = selectedHour,
+                    hasData = hasData
+                ),
                 color = DailyAnalysisColors.TextPrimary,
                 fontSize = 15.2.sp,
                 lineHeight = 20.sp,
@@ -852,15 +869,23 @@ private fun DailyInsightCard(
 @Composable
 private fun RecentRecordsSection(
     records: List<RecentScreenOnRecordUiState>,
+    selectedDate: LocalDate,
     modifier: Modifier = Modifier
 ) {
+    val zoneId = ZoneId.systemDefault()
+    val dayStartMillis = selectedDate.atStartOfDay(zoneId).toInstant().toEpochMilli()
     val displayRecords = records
         .take(4)
         .map { record ->
+            val sameDayRecheck = record.previousScreenOnTime?.let { it >= dayStartMillis } == true
             DisplayRecord(
                 time = formatRecordTime(record.screenOnTime),
-                message = record.intervalSeconds?.let { "${formatIntervalSeconds(it)} 만에 다시 켰어요" }
-                    ?: "오늘의 첫 확인이에요"
+                message = if (sameDayRecheck) {
+                    record.intervalSeconds?.let { "${formatIntervalSeconds(it)} 만에 다시 켰어요" }
+                        ?: "첫 확인이에요"
+                } else {
+                    "첫 확인이에요"
+                }
             )
         }
 
@@ -1143,11 +1168,7 @@ private fun SoftDailyAnalysisCard(
 
 private fun dailyChartValues(hourlyCounts: List<HourlyScreenOnCountUiState>): List<Int> {
     if (hourlyCounts.isEmpty()) {
-        return listOf(
-            2, 1, 1, 2, 3, 5, 14, 7,
-            4, 8, 6, 9, 5, 5, 7, 16,
-            17, 26, 27, 42, 68, 48, 22, 4, 3
-        )
+        return (0..24).map { 0 }
     }
 
     val countsByHour = hourlyCounts.associate { it.hour to it.count }
@@ -1157,14 +1178,22 @@ private fun dailyChartValues(hourlyCounts: List<HourlyScreenOnCountUiState>): Li
 }
 
 private fun selectedChartHour(data: List<Int>): Int {
-    if (data.isEmpty()) return 20
+    if (data.isEmpty()) return 0
     val maxValue = data.maxOrNull() ?: 0
-    if (maxValue == 0) return 20
+    if (maxValue == 0) return 0
     return data.indexOf(maxValue).coerceIn(0, 23)
 }
 
-private fun formatDailyDateLabel(date: LocalDate = LocalDate.now()): String {
-    return "오늘 · ${date.monthValue}월 ${date.dayOfMonth}일 ${formatShortDayOfWeek(date.dayOfWeek)}"
+private fun formatDailyDateLabel(
+    date: LocalDate,
+    today: LocalDate = LocalDate.now()
+): String {
+    val prefix = when (date) {
+        today -> "오늘 · "
+        today.minusDays(1) -> "어제 · "
+        else -> ""
+    }
+    return "$prefix${date.monthValue}월 ${date.dayOfMonth}일 ${formatShortDayOfWeek(date.dayOfWeek)}"
 }
 
 private fun formatShortDayOfWeek(dayOfWeek: DayOfWeek): String {
@@ -1222,7 +1251,14 @@ private fun dailyMetricValueLineHeight(value: String, compact: Boolean): TextUni
     }
 }
 
-private fun busiestHourInsight(selectedHour: Int): AnnotatedString {
+private fun busiestHourInsight(
+    selectedHour: Int,
+    hasData: Boolean
+): AnnotatedString {
+    if (!hasData) {
+        return AnnotatedString("기록이 쌓이면 가장 많이 확인한 시간대를 보여드릴게요.")
+    }
+
     val period = if (selectedHour < 12) "오전" else "오후"
     val hour12 = when (val hour = selectedHour % 12) {
         0 -> 12
@@ -1265,10 +1301,30 @@ private fun TodayAnalysisScreenPreview() {
                     HourlyScreenOnCountUiState(hour = hour, count = count)
                 },
                 recentRecords = listOf(
-                    RecentScreenOnRecordUiState(4, baseTime, 42),
-                    RecentScreenOnRecordUiState(3, baseTime - 32 * 60_000L, 72),
-                    RecentScreenOnRecordUiState(2, baseTime - 135 * 60_000L, 125),
-                    RecentScreenOnRecordUiState(1, baseTime - 230 * 60_000L, 55)
+                    RecentScreenOnRecordUiState(
+                        id = 4,
+                        screenOnTime = baseTime,
+                        intervalSeconds = 42,
+                        previousScreenOnTime = baseTime - 42_000L
+                    ),
+                    RecentScreenOnRecordUiState(
+                        id = 3,
+                        screenOnTime = baseTime - 32 * 60_000L,
+                        intervalSeconds = 72,
+                        previousScreenOnTime = baseTime - 32 * 60_000L - 72_000L
+                    ),
+                    RecentScreenOnRecordUiState(
+                        id = 2,
+                        screenOnTime = baseTime - 135 * 60_000L,
+                        intervalSeconds = 125,
+                        previousScreenOnTime = baseTime - 135 * 60_000L - 125_000L
+                    ),
+                    RecentScreenOnRecordUiState(
+                        id = 1,
+                        screenOnTime = baseTime - 230 * 60_000L,
+                        intervalSeconds = 55,
+                        previousScreenOnTime = baseTime - 230 * 60_000L - 55_000L
+                    )
                 )
             ),
             onBack = {},

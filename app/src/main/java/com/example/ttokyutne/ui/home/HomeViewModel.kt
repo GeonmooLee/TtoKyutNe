@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.ttokyutne.data.local.AppDatabase
+import com.example.ttokyutne.data.local.ScreenOnEventEntity
 import com.example.ttokyutne.data.local.UserSettingsEntity
 import com.example.ttokyutne.data.repository.ScreenOnEventRepository
 import com.example.ttokyutne.data.repository.SettingsRepository
@@ -31,6 +32,7 @@ class HomeViewModel(
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(HomeUiState())
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
+    private var selectedDailyDate: LocalDate? = null
     private var selectedWeekAnchorDate: LocalDate? = null
 
     init {
@@ -42,6 +44,22 @@ class HomeViewModel(
     fun refreshTodayStats() {
         viewModelScope.launch {
             loadTodayStats()
+        }
+    }
+
+    fun showPreviousDayStats() {
+        viewModelScope.launch {
+            selectedDailyDate = (selectedDailyDate ?: currentLocalDate()).minusDays(1)
+            loadDailyAnalysisStats(selectedDailyDate ?: currentLocalDate())
+        }
+    }
+
+    fun showNextDayStats() {
+        viewModelScope.launch {
+            val today = currentLocalDate()
+            val nextDate = (selectedDailyDate ?: today).plusDays(1)
+            selectedDailyDate = if (nextDate.isAfter(today)) today else nextDate
+            loadDailyAnalysisStats(selectedDailyDate ?: today)
         }
     }
 
@@ -143,44 +161,26 @@ class HomeViewModel(
         val zoneId = ZoneId.systemDefault()
         val today = LocalDate.ofInstant(Instant.ofEpochMilli(nowMillis), zoneId)
         val todayStartMillis = today.atStartOfDay(zoneId).toInstant().toEpochMilli()
+        val tomorrowStartMillis = today.plusDays(1).atStartOfDay(zoneId).toInstant().toEpochMilli()
         val yesterdayStartMillis = today.minusDays(1).atStartOfDay(zoneId).toInstant().toEpochMilli()
-        val todayEvents = screenOnEventRepository.getTodayEvents()
+        val todayEvents = screenOnEventRepository.getEventsBetween(
+            startMillis = todayStartMillis,
+            endMillis = tomorrowStartMillis
+        )
         val yesterdayEvents = screenOnEventRepository.getEventsBetween(
             startMillis = yesterdayStartMillis,
             endMillis = todayStartMillis
         )
         val lastEvent = screenOnEventRepository.getLastEvent()
-        val intervalEvents = todayEvents.mapNotNull { it.intervalSeconds }
-        val eventsByHour = todayEvents
-            .groupingBy { event ->
-                Instant.ofEpochMilli(event.screenOnTime).atZone(zoneId).hour
-            }
-            .eachCount()
-        val shorterThanYesterdayCount = (yesterdayEvents.size - todayEvents.size).coerceAtLeast(0)
-        val todayAnalysis = TodayAnalysisUiState(
-            totalScreenOnCount = todayEvents.size,
-            averageIntervalSeconds = intervalEvents.takeIf { it.isNotEmpty() }
-                ?.average()
-                ?.roundToLong(),
-            shortestIntervalSeconds = intervalEvents.minOrNull(),
-            recheckWithinTenMinutesCount = intervalEvents.count { it <= 600L },
-            hourlyScreenOnCounts = (0..23).map { hour ->
-                HourlyScreenOnCountUiState(
-                    hour = hour,
-                    count = eventsByHour[hour] ?: 0
-                )
-            },
-            recentRecords = todayEvents
-                .asReversed()
-                .take(5)
-                .map { event ->
-                    RecentScreenOnRecordUiState(
-                        id = event.id,
-                        screenOnTime = event.screenOnTime,
-                        intervalSeconds = event.intervalSeconds
-                    )
-                }
+        val todayAnalysis = buildDailyAnalysisUiState(
+            date = today,
+            dayStartMillis = todayStartMillis,
+            events = todayEvents,
+            zoneId = zoneId
         )
+        val intervalEvents = todayRecheckIntervals(todayEvents, todayStartMillis)
+        val shorterThanYesterdayCount = (yesterdayEvents.size - todayEvents.size).coerceAtLeast(0)
+        selectedDailyDate = today
 
         _uiState.update {
             it.copy(
@@ -198,6 +198,81 @@ class HomeViewModel(
         }
 
         Log.d(LOG_TAG, "Loaded today screen_on_event count=${todayEvents.size}")
+    }
+
+    private suspend fun loadDailyAnalysisStats(date: LocalDate) {
+        val zoneId = ZoneId.systemDefault()
+        val dayStartMillis = date.atStartOfDay(zoneId).toInstant().toEpochMilli()
+        val nextDayStartMillis = date.plusDays(1).atStartOfDay(zoneId).toInstant().toEpochMilli()
+        val dayEvents = screenOnEventRepository.getEventsBetween(
+            startMillis = dayStartMillis,
+            endMillis = nextDayStartMillis
+        )
+        val dailyAnalysis = buildDailyAnalysisUiState(
+            date = date,
+            dayStartMillis = dayStartMillis,
+            events = dayEvents,
+            zoneId = zoneId
+        )
+
+        _uiState.update { it.copy(todayAnalysis = dailyAnalysis) }
+
+        Log.d(LOG_TAG, "Loaded daily analysis count=${dayEvents.size}, date=$date")
+    }
+
+    private fun buildDailyAnalysisUiState(
+        date: LocalDate,
+        dayStartMillis: Long,
+        events: List<ScreenOnEventEntity>,
+        zoneId: ZoneId
+    ): TodayAnalysisUiState {
+        val intervalEvents = todayRecheckIntervals(events, dayStartMillis)
+        val eventsByHour = events
+            .groupingBy { event ->
+                Instant.ofEpochMilli(event.screenOnTime).atZone(zoneId).hour
+            }
+            .eachCount()
+
+        return TodayAnalysisUiState(
+            selectedDate = date,
+            totalScreenOnCount = events.size,
+            averageIntervalSeconds = intervalEvents.takeIf { it.isNotEmpty() }
+                ?.average()
+                ?.roundToLong(),
+            shortestIntervalSeconds = intervalEvents.minOrNull(),
+            recheckWithinTenMinutesCount = intervalEvents.count { it <= 600L },
+            hourlyScreenOnCounts = (0..23).map { hour ->
+                HourlyScreenOnCountUiState(
+                    hour = hour,
+                    count = eventsByHour[hour] ?: 0
+                )
+            },
+            recentRecords = events
+                .asReversed()
+                .take(5)
+                .map { event ->
+                    RecentScreenOnRecordUiState(
+                        id = event.id,
+                        screenOnTime = event.screenOnTime,
+                        intervalSeconds = event.intervalSeconds,
+                        previousScreenOnTime = event.previousScreenOnTime
+                    )
+                }
+        )
+    }
+
+    private fun todayRecheckIntervals(
+        events: List<ScreenOnEventEntity>,
+        dayStartMillis: Long
+    ): List<Long> {
+        return events.mapNotNull { event ->
+            val previousScreenOnTime = event.previousScreenOnTime
+            if (previousScreenOnTime != null && previousScreenOnTime >= dayStartMillis) {
+                event.intervalSeconds
+            } else {
+                null
+            }
+        }
     }
 
     private suspend fun loadWeeklyStats(

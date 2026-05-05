@@ -969,12 +969,6 @@ private fun InsightRow(
                         softWrap = false
                     )
                 }
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_chevron_right_rounded),
-                    contentDescription = null,
-                    tint = AnalysisColors.IconInactive,
-                    modifier = Modifier.size(24.dp)
-                )
             }
         }
     }

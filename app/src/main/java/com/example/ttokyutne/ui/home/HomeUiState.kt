@@ -18,6 +18,7 @@ data class HomeUiState(
 )
 
 data class TodayAnalysisUiState(
+    val selectedDate: LocalDate = LocalDate.now(),
     val totalScreenOnCount: Int = 0,
     val averageIntervalSeconds: Long? = null,
     val shortestIntervalSeconds: Long? = null,
@@ -29,7 +30,8 @@ data class TodayAnalysisUiState(
 data class RecentScreenOnRecordUiState(
     val id: Long,
     val screenOnTime: Long,
-    val intervalSeconds: Long?
+    val intervalSeconds: Long?,
+    val previousScreenOnTime: Long? = null
 )
 
 data class WeeklyAnalysisUiState(
