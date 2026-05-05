@@ -46,7 +46,7 @@ class NotificationHelper(
 
         val recheckVibrateChannel = NotificationChannel(
             RECHECK_ALERT_CHANNEL_ID,
-            "또켰네 알림",
+            "잠깐 알림",
             NotificationManager.IMPORTANCE_HIGH
         ).apply {
             description = "짧은 간격으로 화면을 다시 켰을 때 표시되는 알림입니다"
@@ -84,7 +84,7 @@ class NotificationHelper(
         val now = System.currentTimeMillis()
         val notification = NotificationCompat.Builder(context, RECHECK_ALERT_CHANNEL_ID)
             .setSmallIcon(android.R.drawable.ic_dialog_info)
-            .setContentTitle("또켰네")
+            .setContentTitle("잠깐")
             .setContentText(contentText)
             .setStyle(NotificationCompat.BigTextStyle().bigText(contentText))
             .setContentIntent(createMainActivityPendingIntent(200))

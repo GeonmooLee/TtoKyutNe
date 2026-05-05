@@ -37,10 +37,11 @@ fun TtoKyutNeTheme(
         darkTheme -> DarkColorScheme
         else -> LightColorScheme
     }
+    val appTypography = rememberAppTypography()
 
     MaterialTheme(
         colorScheme = colorScheme,
-        typography = Typography,
+        typography = appTypography,
         content = content
     )
 }
